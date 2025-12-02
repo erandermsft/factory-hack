@@ -285,6 +285,13 @@ fi
 # Store the keys and properties in a file
 echo "Storing the keys and properties in '.env' file..."
 
+# Get subscription ID
+subscriptionId=$(az account show --query id -o tsv 2>/dev/null || echo "")
+
+# Azure resource group and subscription
+echo "RESOURCE_GROUP=\"$resourceGroupName\"" >> ../.env
+echo "AZURE_SUBSCRIPTION_ID=\"$subscriptionId\"" >> ../.env
+
 # Azure Storage (with both naming conventions)
 echo "AZURE_STORAGE_ACCOUNT_NAME=\"$storageAccountName\"" >> ../.env
 echo "AZURE_STORAGE_ACCOUNT_KEY=\"$storageAccountKey\"" >> ../.env
@@ -392,8 +399,8 @@ else
 fi
 echo "AZURE_OPENAI_ENDPOINT=\"$azureOpenAIEndpoint\"" >> ../.env
 echo "AZURE_OPENAI_KEY=\"$aiFoundryKey\"" >> ../.env
-echo "AZURE_OPENAI_DEPLOYMENT_NAME=\"gpt-4.1-mini\"" >> ../.env
-echo "MODEL_DEPLOYMENT_NAME=\"gpt-4.1-mini\"" >> ../.env
+echo "AZURE_OPENAI_DEPLOYMENT_NAME=\"gpt-4.1\"" >> ../.env
+echo "MODEL_DEPLOYMENT_NAME=\"gpt-4.1\"" >> ../.env
 
 echo "Keys and properties are stored in '.env' file successfully."
 

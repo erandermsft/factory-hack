@@ -285,17 +285,17 @@
     },
     {
       "type": "Microsoft.CognitiveServices/accounts/deployments",
-      "apiVersion": "2024-10-01",
-      "name": "[format('{0}/{1}', variables('aiFoundryName'), 'gpt-4.1-mini')]",
+      "apiVersion": "2025-04-01-preview",
+      "name": "[format('{0}/{1}', variables('aiFoundryName'), 'gpt-4.1')]",
       "sku": {
         "capacity": 100,
         "name": "GlobalStandard"
       },
       "properties": {
         "model": {
-          "name": "gpt-4.1-mini",
+          "name": "gpt-4.1",
           "format": "OpenAI"
-        }
+         }
       },
       "dependsOn": [
         "[resourceId('Microsoft.CognitiveServices/accounts', variables('aiFoundryName'))]"
@@ -367,62 +367,6 @@
       "dependsOn": [
         "[resourceId('Microsoft.CognitiveServices/accounts', variables('aiFoundryName'))]",
         "[resourceId('Microsoft.Search/searchServices', variables('searchServiceName'))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Resources/deploymentScripts",
-      "apiVersion": "2020-10-01",
-      "name": "seedCosmosDB",
-      "location": "[parameters('location')]",
-      "kind": "AzureCLI",
-      "identity": {
-        "type": "UserAssigned",
-        "userAssignedIdentities": {
-          "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-seed-identity', variables('prefix')))]": {}
-        }
-      },
-      "properties": {
-        "azCliVersion": "2.50.0",
-        "timeout": "PT30M",
-        "retentionInterval": "P1D",
-        "environmentVariables": [
-          {
-            "name": "COSMOS_ENDPOINT",
-            "value": "[reference(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbAccountName')), '2023-04-15').documentEndpoint]"
-          },
-          {
-            "name": "COSMOS_KEY",
-            "secureValue": "[listKeys(resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbAccountName')), '2023-04-15').primaryMasterKey]"
-          },
-          {
-            "name": "RESOURCE_GROUP",
-            "value": "[resourceGroup().name]"
-          }
-        ],
-        "scriptContent": "#!/bin/bash\nset -e\n\necho \"Installing jq for JSON processing...\"\napk add --no-cache jq curl\n\necho \"Creating Cosmos DB database and containers...\"\nCOSMOS_ACCOUNT=$(echo $COSMOS_ENDPOINT | sed 's/https:\\/\\///' | sed 's/\\.documents\\.azure\\.com.*//')\nDATABASE_NAME=\"FactoryOpsDB\"\n\necho \"Creating database: $DATABASE_NAME\"\naz cosmosdb sql database create \\\n  --account-name \"$COSMOS_ACCOUNT\" \\\n  --resource-group \"$RESOURCE_GROUP\" \\\n  --name \"$DATABASE_NAME\" \\\n  --only-show-errors || echo \"Database already exists\"\n\necho \"Creating containers...\"\nfor container in \"Machines:type\" \"Thresholds:machineType\" \"Telemetry:machineId\" \"KnowledgeBase:machineType\" \"PartsInventory:category\" \"Technicians:department\" \"WorkOrders:status\"; do\n  IFS=':' read -r name pk <<< \"$container\"\n  echo \"Creating container: $name\"\n  az cosmosdb sql container create \\\n    --account-name \"$COSMOS_ACCOUNT\" \\\n    --resource-group \"$RESOURCE_GROUP\" \\\n    --database-name \"$DATABASE_NAME\" \\\n    --name \"$name\" \\\n    --partition-key-path \"/$pk\" \\\n    --throughput 400 \\\n    --only-show-errors || echo \"$name already exists\"\ndone\n\necho \"Cosmos DB setup complete!\"\necho \"Note: Run the seed-data.sh script manually to populate initial data.\""
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbAccountName'))]",
-        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-seed-identity', variables('prefix')))]"
-      ]
-    },
-    {
-      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
-      "apiVersion": "2023-01-31",
-      "name": "[format('{0}-seed-identity', variables('prefix'))]",
-      "location": "[parameters('location')]"
-    },
-    {
-      "type": "Microsoft.Authorization/roleAssignments",
-      "apiVersion": "2022-04-01",
-      "name": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-seed-identity', variables('prefix'))), resourceGroup().id, variables('contributorRoleId'))]",
-      "properties": {
-        "roleDefinitionId": "[variables('contributorRoleId')]",
-        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-seed-identity', variables('prefix'))), '2023-01-31').principalId]",
-        "principalType": "ServicePrincipal"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', format('{0}-seed-identity', variables('prefix')))]"
       ]
     }
   ],

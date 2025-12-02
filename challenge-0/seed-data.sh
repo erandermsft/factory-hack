@@ -1,181 +1,148 @@
 #!/bin/bash
-
-# Tire Factory Data Seeding Script
-# This script seeds Cosmos DB with initial data for the tire manufacturing factory
-
 set -e
 
-echo "=========================================="
-echo "Tire Factory Data Seeding Script"
-echo "=========================================="
-
-# Check if required environment variables are set
-if [ -z "$COSMOS_ENDPOINT" ] || [ -z "$COSMOS_KEY" ]; then
-    echo "Error: COSMOS_ENDPOINT and COSMOS_KEY environment variables must be set"
+# Load environment variables from .env in parent directory
+if [ -f ../.env ]; then
+    set -a
+    source ../.env
+    set +a
+    echo "✅ Loaded environment variables from ../.env"
+else
+    echo "❌ .env file not found. Please run get-keys.sh first."
     exit 1
 fi
 
-# Install Azure CLI Cosmos DB extension if not already installed
-echo "Checking Azure CLI Cosmos DB extension..."
-az extension add --name cosmosdb-preview --yes --only-show-errors 2>/dev/null || true
+echo "🚀 Starting data seeding..."
 
-# Parse Cosmos DB account name from endpoint
-COSMOS_ACCOUNT=$(echo $COSMOS_ENDPOINT | sed 's/https:\/\///' | sed 's/\.documents\.azure\.com.*//')
-echo "Cosmos DB Account: $COSMOS_ACCOUNT"
+# Install required Python packages
+echo "📦 Installing required Python packages..."
+pip3 install azure-cosmos --quiet
 
-# Database and container names
-DATABASE_NAME="FactoryOpsDB"
-MACHINES_CONTAINER="Machines"
-THRESHOLDS_CONTAINER="Thresholds"
-TELEMETRY_CONTAINER="Telemetry"
-KNOWLEDGE_CONTAINER="KnowledgeBase"
-PARTS_CONTAINER="PartsInventory"
-TECHNICIANS_CONTAINER="Technicians"
-WORKORDERS_CONTAINER="WorkOrders"
+# Create Python script to handle the data import
+cat > seed_data.py << 'EOF'
+import json
+import os
+from azure.cosmos import CosmosClient, PartitionKey
 
-echo ""
-echo "Creating database: $DATABASE_NAME"
-az cosmosdb sql database create \
-    --account-name "$COSMOS_ACCOUNT" \
-    --resource-group "$RESOURCE_GROUP" \
-    --name "$DATABASE_NAME" \
-    --only-show-errors || echo "Database already exists"
+def load_json_data(file_path):
+    """Load data from JSON file"""
+    data = []
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = json.load(f)
+            # If it's already a list, use it as is
+            if isinstance(content, list):
+                data = content
+            else:
+                data = [content]
+        print(f"✅ Loaded {len(data)} records from {file_path}")
+        return data
+    except Exception as e:
+        print(f"❌ Error loading {file_path}: {e}")
+        return []
 
-echo ""
-echo "Creating containers..."
-
-# Create Machines container
-az cosmosdb sql container create \
-    --account-name "$COSMOS_ACCOUNT" \
-    --resource-group "$RESOURCE_GROUP" \
-    --database-name "$DATABASE_NAME" \
-    --name "$MACHINES_CONTAINER" \
-    --partition-key-path "/type" \
-    --throughput 400 \
-    --only-show-errors || echo "$MACHINES_CONTAINER container already exists"
-
-# Create Thresholds container
-az cosmosdb sql container create \
-    --account-name "$COSMOS_ACCOUNT" \
-    --resource-group "$RESOURCE_GROUP" \
-    --database-name "$DATABASE_NAME" \
-    --name "$THRESHOLDS_CONTAINER" \
-    --partition-key-path "/machineType" \
-    --throughput 400 \
-    --only-show-errors || echo "$THRESHOLDS_CONTAINER container already exists"
-
-# Create Telemetry container with TTL enabled
-az cosmosdb sql container create \
-    --account-name "$COSMOS_ACCOUNT" \
-    --resource-group "$RESOURCE_GROUP" \
-    --database-name "$DATABASE_NAME" \
-    --name "$TELEMETRY_CONTAINER" \
-    --partition-key-path "/machineId" \
-    --throughput 400 \
-    --ttl 2592000 \
-    --only-show-errors || echo "$TELEMETRY_CONTAINER container already exists"
-
-# Create KnowledgeBase container
-az cosmosdb sql container create \
-    --account-name "$COSMOS_ACCOUNT" \
-    --resource-group "$RESOURCE_GROUP" \
-    --database-name "$DATABASE_NAME" \
-    --name "$KNOWLEDGE_CONTAINER" \
-    --partition-key-path "/machineType" \
-    --throughput 400 \
-    --only-show-errors || echo "$KNOWLEDGE_CONTAINER container already exists"
-
-# Create PartsInventory container
-az cosmosdb sql container create \
-    --account-name "$COSMOS_ACCOUNT" \
-    --resource-group "$RESOURCE_GROUP" \
-    --database-name "$DATABASE_NAME" \
-    --name "$PARTS_CONTAINER" \
-    --partition-key-path "/category" \
-    --throughput 400 \
-    --only-show-errors || echo "$PARTS_CONTAINER container already exists"
-
-# Create Technicians container
-az cosmosdb sql container create \
-    --account-name "$COSMOS_ACCOUNT" \
-    --resource-group "$RESOURCE_GROUP" \
-    --database-name "$DATABASE_NAME" \
-    --name "$TECHNICIANS_CONTAINER" \
-    --partition-key-path "/department" \
-    --throughput 400 \
-    --only-show-errors || echo "$TECHNICIANS_CONTAINER container already exists"
-
-# Create WorkOrders container
-az cosmosdb sql container create \
-    --account-name "$COSMOS_ACCOUNT" \
-    --resource-group "$RESOURCE_GROUP" \
-    --database-name "$DATABASE_NAME" \
-    --name "$WORKORDERS_CONTAINER" \
-    --partition-key-path "/status" \
-    --throughput 400 \
-    --only-show-errors || echo "$WORKORDERS_CONTAINER container already exists"
-
-echo ""
-echo "Containers created successfully!"
-
-# Function to upload data to Cosmos DB
-upload_data() {
-    local container=$1
-    local file=$2
-    local partition_key=$3
+def setup_cosmos_db():
+    """Set up Cosmos DB database and containers"""
+    print("📦 Setting up Cosmos DB...")
     
-    echo ""
-    echo "Uploading data to $container from $file..."
+    # Initialize Cosmos client
+    cosmos_client = CosmosClient(os.environ['COSMOS_ENDPOINT'], os.environ['COSMOS_KEY'])
     
-    # Read JSON file and upload each item
-    items=$(cat "$file" | jq -c '.[]')
-    count=0
+    # Create database
+    database_name = "FactoryOpsDB"
+    try:
+        database = cosmos_client.create_database_if_not_exists(id=database_name)
+        print(f"✅ Database '{database_name}' ready")
+    except Exception as e:
+        print(f"❌ Error creating database: {e}")
+        return None, None
     
-    while IFS= read -r item; do
-        # Extract partition key value
-        pk_value=$(echo "$item" | jq -r ".$partition_key")
-        
-        # Upload to Cosmos DB using Data Plane API
-        curl -s -X POST \
-            "$COSMOS_ENDPOINT/dbs/$DATABASE_NAME/colls/$container/docs" \
-            -H "Authorization: $COSMOS_KEY" \
-            -H "Content-Type: application/json" \
-            -H "x-ms-documentdb-partitionkey: [\"$pk_value\"]" \
-            -H "x-ms-version: 2018-12-31" \
-            -d "$item" > /dev/null
-        
-        ((count++))
-    done <<< "$items"
+    # Container definitions with partition keys and optional TTL
+    containers_config = {
+        'Machines': {'partition_key': '/type'},
+        'Thresholds': {'partition_key': '/machineType'},
+        'Telemetry': {'partition_key': '/machineId', 'ttl': 2592000},  # 30 days TTL
+        'KnowledgeBase': {'partition_key': '/machineType'},
+        'PartsInventory': {'partition_key': '/category'},
+        'Technicians': {'partition_key': '/department'},
+        'WorkOrders': {'partition_key': '/status'}
+    }
     
-    echo "Uploaded $count items to $container"
-}
+    container_clients = {}
+    for container_name, config in containers_config.items():
+        try:
+            container = database.create_container_if_not_exists(
+                id=container_name,
+                partition_key=PartitionKey(path=config['partition_key']),
+                default_ttl=config.get('ttl', None)
+            )
+            container_clients[container_name] = container
+            print(f"✅ Container '{container_name}' ready")
+        except Exception as e:
+            print(f"❌ Error creating container {container_name}: {e}")
+    
+    return database, container_clients
 
-# Upload all data files
-echo ""
-echo "=========================================="
-echo "Uploading Data Files"
-echo "=========================================="
+def seed_cosmos_data(container_clients):
+    """Seed data into Cosmos DB containers"""
+    print("📦 Seeding Cosmos DB data...")
+    
+    # Data file mappings
+    data_mappings = {
+        'Machines': 'data/machines.json',
+        'Thresholds': 'data/thresholds.json',
+        'Telemetry': 'data/telemetry-samples.json',
+        'KnowledgeBase': 'data/knowledge-base.json',
+        'PartsInventory': 'data/parts-inventory.json',
+        'Technicians': 'data/technicians.json',
+        'WorkOrders': 'data/work-orders.json'
+    }
+    
+    for container_name, file_path in data_mappings.items():
+        if container_name in container_clients:
+            data = load_json_data(file_path)
+            if data:
+                container = container_clients[container_name]
+                success_count = 0
+                for item in data:
+                    try:
+                        # Ensure document has an id
+                        if 'id' not in item:
+                            print(f"⚠️ Item in {container_name} missing 'id' field")
+                            continue
+                        container.create_item(body=item)
+                        success_count += 1
+                    except Exception as e:
+                        if "Conflict" not in str(e):  # Ignore conflicts (already exists)
+                            print(f"⚠️ Error inserting item into {container_name}: {e}")
+                print(f"✅ Imported {success_count} items into {container_name}")
 
-# Define data directory
-DATA_DIR="$(dirname "$0")/../data"
+def main():
+    """Main function to orchestrate the data seeding"""
+    # Check required environment variables
+    required_vars = ['COSMOS_ENDPOINT', 'COSMOS_KEY']
+    missing_vars = [var for var in required_vars if not os.environ.get(var)]
+    
+    if missing_vars:
+        print(f"❌ Missing environment variables: {', '.join(missing_vars)}")
+        return
+    
+    # Set up Cosmos DB
+    database, container_clients = setup_cosmos_db()
+    if container_clients:
+        seed_cosmos_data(container_clients)
+    
+    print("✅ Data seeding completed successfully!")
 
-# Upload each data file
-upload_data "$MACHINES_CONTAINER" "$DATA_DIR/machines.json" "type"
-upload_data "$THRESHOLDS_CONTAINER" "$DATA_DIR/thresholds.json" "machineType"
-upload_data "$TELEMETRY_CONTAINER" "$DATA_DIR/telemetry-samples.json" "machineId"
-upload_data "$KNOWLEDGE_CONTAINER" "$DATA_DIR/knowledge-base.json" "machineType"
-upload_data "$PARTS_CONTAINER" "$DATA_DIR/parts-inventory.json" "category"
-upload_data "$TECHNICIANS_CONTAINER" "$DATA_DIR/technicians.json" "department"
-upload_data "$WORKORDERS_CONTAINER" "$DATA_DIR/work-orders.json" "status"
+if __name__ == "__main__":
+    main()
+EOF
 
-echo ""
-echo "=========================================="
-echo "Data Seeding Complete!"
-echo "=========================================="
-echo ""
-echo "Summary:"
-echo "  Database: $DATABASE_NAME"
-echo "  Containers: 7"
-echo "  Cosmos DB Endpoint: $COSMOS_ENDPOINT"
-echo ""
-echo "You can now start using the tire factory data!"
+# Run the Python script
+echo "🐍 Running data seeding script..."
+python3 seed_data.py
+
+# Clean up
+rm seed_data.py
+
+echo "✅ Seeding complete!"
