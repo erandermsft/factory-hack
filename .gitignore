@@ -1,3 +1,8 @@
+# Hack automation credentials (sensitive)
+hack-setup-automation/coach-credentials.txt
+hack-setup-automation/hack-user-credentials.txt
+hack-setup-automation/hack-user-credentials.csv
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
