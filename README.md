@@ -16,18 +16,18 @@ By participating in this hackathon, you will learn how to:
 - **Build Specialized Maintenance Agents** (Anomaly Detection, Fault Diagnosis, Repair Planner, Scheduler) with advanced prompt engineering, tool integration, and persistent memory capabilities
 - **Implement RAG Patterns** using Azure Cognitive Search for knowledge retrieval and intelligent root cause analysis
 - **Deploy Sequential Orchestration** leveraging Agent Framework workflows to coordinate specialized agents into cohesive maintenance pipelines
-- **Apply Enterprise Observability** using OpenTelemetry monitoring, Azure AI Foundry tracking, and comprehensive system observability for production-ready agent systems
+- **Apply Enterprise Observability** using OpenTelemetry monitoring, Microsoft Foundry tracking, and comprehensive system observability for production-ready agent systems
 
 ## Architecture
 
 In this hackathon we will leverage the **Microsoft Agent Framework** to create a sophisticated, enterprise-ready predictive maintenance solution. The architecture follows a 4-agent sequential pattern:
 
 - **Anomaly Detection Agent:** Monitors IoT telemetry and detects abnormal equipment behavior using threshold-based logic from Azure Cosmos DB
-- **Fault Diagnosis Agent:** Performs root cause analysis using RAG pattern with Azure Cognitive Search and Azure AI Foundry agents for intelligent diagnostics
-- **Repair Planner Agent:** Creates work orders and validates resource availability (parts, technicians, schedule) using Azure AI Foundry agents and multi-container Cosmos DB queries
-- **Maintenance Scheduler Agent:** Coordinates logistics, books technicians, and manages execution using Azure AI Foundry agents and optional Calendar API integration
+- **Fault Diagnosis Agent:** Performs root cause analysis using RAG pattern with Azure Cognitive Search and Microsoft Foundry agents for intelligent diagnostics
+- **Repair Planner Agent:** Creates work orders and validates resource availability (parts, technicians, schedule) using Microsoft Foundry agents and multi-container Cosmos DB queries
+- **Maintenance Scheduler Agent:** Coordinates logistics, books technicians, and manages execution using Microsoft Foundry agents and optional Calendar API integration
 
-The workflow follows the principle of **"right tool for the right job"** - using Azure AI Foundry agents for conversational AI capabilities and sequential orchestration. This ensures continuous monitoring, rapid response to anomalies, and comprehensive maintenance planning with full observability.
+The workflow follows the principle of **"right tool for the right job"** - using Microsoft Foundry agents for conversational AI capabilities and sequential orchestration. This ensures continuous monitoring, rapid response to anomalies, and comprehensive maintenance planning with full observability.
 
 ![Architecture](./images/architecture.png)
 

@@ -11,9 +11,13 @@
         },
         "ghcr.io/devcontainers/features/node:1": {
             "version": "lts"
+        },
+        "ghcr.io/devcontainers/features/dotnet:2": {
+            "version": "10.0",
+            "installUsingApt": true
         }
     },
-    "postCreateCommand": "pip3 install --user -r requirements.txt",
+    "postCreateCommand": "pip3 install --user -r requirements.txt && bash .devcontainer/setup-dotnet.sh",
     "customizations": {
         "vscode": {
             "extensions": [
@@ -25,6 +29,9 @@
                 "ms-python.python",
                 "ms-python.vscode-pylance",
                 "ms-python.vscode-python-envs",
+                "ms-dotnettools.csdevkit",
+                "ms-dotnettools.csharp",
+                "ms-dotnettools.vscode-dotnet-runtime",
                 "ms-toolsai.jupyter",
                 "ms-toolsai.jupyter-keymap",
                 "ms-toolsai.jupyter-renderers",

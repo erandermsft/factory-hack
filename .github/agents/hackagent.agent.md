@@ -28,7 +28,7 @@ You are a GitHub Copilot agent specialised in building hackathon challenge repos
    - Azure Functions
    - Azure Cosmos DB
    - Azure Cognitive Search
-   - Azure AI Foundry
+   - Microsoft Foundry
    - Azure Container Apps
    - Azure API Management
 

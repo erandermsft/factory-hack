@@ -9,7 +9,7 @@ Set up the Azure infrastructure and seed initial data for the tire factory predi
 ## Technologies Used
 - Azure Resource Manager (ARM Templates)
 - Azure Cosmos DB
-- Azure AI Foundry
+- Microsoft Foundry
 - Azure Cognitive Search
 - Azure Container Apps
 - GitHub Codespaces
@@ -94,7 +94,7 @@ bash challenge-00/scripts/seed-data.sh
 - Azure Cognitive Search
 
 **AI & Analytics:**
-- Azure AI Foundry Hub & Project
+- Microsoft Foundry Hub & Project
 - GPT-4.1-mini deployment
 - Azure Content Safety
 - Application Insights
@@ -342,7 +342,7 @@ Build an agent that:
 **You'll work with:**
 - The 5 warning telemetry samples already seeded
 - The threshold definitions for each machine type
-- Azure AI Foundry for intelligent analysis
+- Microsoft Foundry for intelligent analysis
 
 ## Clean Up
 
@@ -355,7 +355,7 @@ az group delete --name $RESOURCE_GROUP --yes --no-wait
 ## Additional Resources
 
 - [Azure Cosmos DB Documentation](https://learn.microsoft.com/azure/cosmos-db/)
-- [Azure AI Foundry](https://learn.microsoft.com/azure/ai-foundry/)
+- [Microsoft Foundry](https://learn.microsoft.com/azure/ai-foundry/)
 - [Azure Cognitive Search](https://learn.microsoft.com/azure/search/)
 - [Tire Manufacturing Process](https://en.wikipedia.org/wiki/Tire_manufacturing)
 - [Predictive Maintenance Patterns](https://learn.microsoft.com/azure/architecture/data-guide/scenarios/predictive-maintenance)
