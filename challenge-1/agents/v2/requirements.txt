@@ -1,0 +1,7 @@
+azure-identity
+azure-cosmos
+agent-framework
+# azure-ai-agents
+# agent-framework-core
+# agent-framework-azure-ai
+# azure-ai-projects
