@@ -3,6 +3,7 @@ import os
 import importlib.util
 from pathlib import Path
 from typing import Annotated
+from agent_framework import HostedMCPTool
 from azure.identity.aio import AzureCliCredential
 from agent_framework import ChatAgent
 from agent_framework.azure import AzureAIAgentClient, AzureAIClient
@@ -11,7 +12,14 @@ from azure.ai.projects.aio import AIProjectClient
 from azure.cosmos import CosmosClient
 from pydantic import Field
 from dotenv import load_dotenv
-
+from azure.ai.agents.models import (
+    ListSortOrder,
+    McpTool,
+    RequiredMcpToolCall,
+    RunStepActivityDetails,
+    SubmitToolApprovalAction,
+    ToolApproval,
+)
 load_dotenv(override=True)
 
 # Configuration
@@ -27,7 +35,8 @@ database = cosmos_client.get_database_client("FactoryOpsDB")
 telemetry_container = database.get_container_client("Telemetry")
 thresholds_container = database.get_container_client("Thresholds")
 machines_container = database.get_container_client("Machines")
-
+mcp_endpoint = os.environ.get("MACHINE_MCP_SERVER_ENDPOINT")
+mcp_subscription_key = os.environ.get("APIM_SUBSCRIPTION_KEY")
 
 def get_thresholds(machine_type: str) -> list:
     """Get all thresholds for a machine type from Cosmos DB"""
@@ -54,12 +63,22 @@ def get_machine_data(machine_id: str) -> dict:
     except Exception as e:
         return {"error": str(e)}
 
+# mcp_tool = McpTool(
+#     server_label="machinemcp", 
+#     server_url=mcp_endpoint,
+# )
+mcp_tool = HostedMCPTool(name="Machine data",
+                          url=mcp_endpoint
+                        ),
+
+# mcp_tool.update_headers("Ocp-Apim-Subscription-Key",
+#                         mcp_subscription_key)
 
 async def main():
     try:
         async with (
             AzureCliCredential() as credential,
-            AzureAIAgentClient(credential=credential).create_agent(
+            AzureAIClient(credential=credential).create_agent(
                     name="AnomalyClassificationAgent",
                     instructions="""You are a Anomaly Classification Agent evaluating machine anomalies for warning and critical threshold violations.
                         You will receive anomaly data for a given machine. Your task is to:
@@ -67,7 +86,7 @@ async def main():
                         - Raise an alert for maintenance if any critical or warning violations were found
 
                         You have access to the following tools:
-                        - get_machine_data: fetch machine information such as type for a particular machine id
+                        - Machine data: fetch machine information such as type for a particular machine id
                         - get_thresholds: fetch threshold rules for different metrics per machine type
 
                         Use these functions to extract and validate the anomaly data.
@@ -85,9 +104,7 @@ async def main():
                         - summary: human readable summary of the anomalies 
 
                         """,
-                    tools=[
-                        get_machine_data,
-                        get_thresholds]
+                    tools = [HostedMCPTool( name="Machine Data", url=mcp_endpoint, approval_mode="never_require",headers={"Ocp-Apim-Subscription-Key": mcp_subscription_key}), get_thresholds]
 
                     ) as agent,
                 ):
