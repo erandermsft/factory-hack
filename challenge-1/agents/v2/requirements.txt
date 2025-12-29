@@ -1,8 +1,9 @@
-requests
+#requests
 azure-identity
 azure-cosmos
-agent-framework
-azure-search-documents
+agent-framework==1.0.0b251211    
+azure-search-documents==11.7.0b2
+#azure-ai-projects
 # azure-ai-agents
 # agent-framework-core
 # agent-framework-azure-ai

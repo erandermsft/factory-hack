@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Annotated
 from agent_framework import HostedMCPTool
 from azure.identity.aio import AzureCliCredential
-from agent_framework.azure import AzureAIClient
+from agent_framework.azure import AzureAIAgentClient, AzureAIClient
 
 from azure.cosmos import CosmosClient
 from dotenv import load_dotenv
@@ -41,8 +41,9 @@ async def main():
     try:
         async with (
             AzureCliCredential() as credential,
-            AzureAIClient(credential=credential).create_agent(
+            AzureAIAgentClient(async_credential=credential).create_agent(
                     name="FaultDiagnosisAgent",
+                    
                     instructions="""You are a Fault Diagnosis Agent evaluating the root cause of maintenance alerts
                         You will receive detected sensor deviations for a given machine. Your task is to:
                         - Find the most likely root cause for the deviation 
@@ -63,7 +64,6 @@ async def main():
 
                     ) as agent,
                 ):
-
                     print(f"✅ Created Fault Diagnosis Agent: {agent.id}")
                     # Test the agent with a simple query
                     print("\n🧪 Testing the agent with a sample query...")

@@ -7,7 +7,6 @@ from azure.identity.aio import AzureCliCredential
 from agent_framework import ChatAgent
 from agent_framework.azure import AzureAIAgentClient, AzureAIClient
 from azure.ai.projects.aio import AIProjectClient
-
 from azure.cosmos import CosmosClient
 from pydantic import Field
 from dotenv import load_dotenv
@@ -59,7 +58,7 @@ async def main():
     try:
         async with (
             AzureCliCredential() as credential,
-            AzureAIAgentClient(credential=credential).create_agent(
+            AzureAIAgentClient(async_credential=credential).create_agent(
                     name="AnomalyClassificationAgent",
                     instructions="""You are a Anomaly Classification Agent evaluating machine anomalies for warning and critical threshold violations.
                         You will receive anomaly data for a given machine. Your task is to:

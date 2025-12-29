@@ -11,7 +11,7 @@ Duration: 60 min
 
 3. Fault Diagnosis Agent with knowledge base
     a. Configure Search/Foundry IQ for additional knowledge data
-    b. Test together with machine MCP and 
+    b. Test together with machine MCP to get root cause details 
 
 4. Add memory
     a. Configure memory for Fault Diagnosis Agent

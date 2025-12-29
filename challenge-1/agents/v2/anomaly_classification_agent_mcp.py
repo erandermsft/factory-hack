@@ -68,7 +68,7 @@ async def main():
     try:
         async with (
             AzureCliCredential() as credential,
-            AzureAIClient(credential=credential).create_agent(
+            AzureAIAgentClient(async_credential=credential).create_agent(
                     name="AnomalyClassificationAgent",
                     instructions="""You are a Anomaly Classification Agent evaluating machine anomalies for warning and critical threshold violations.
                         You will receive anomaly data for a given machine. Your task is to:
