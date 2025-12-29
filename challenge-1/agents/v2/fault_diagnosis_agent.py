@@ -32,23 +32,22 @@ cosmos_key = os.environ.get("COSMOS_KEY")
 # Initialize Cosmos DB clients globally for function tools
 cosmos_client = CosmosClient(cosmos_endpoint, cosmos_key)
 database = cosmos_client.get_database_client("FactoryOpsDB")
-telemetry_container = database.get_container_client("Telemetry")
-thresholds_container = database.get_container_client("Thresholds")
+knowledge_container = database.get_container_client("KnowledgeBase")
 machines_container = database.get_container_client("Machines")
 mcp_endpoint = os.environ.get("MACHINE_MCP_SERVER_ENDPOINT")
 mcp_subscription_key = os.environ.get("APIM_SUBSCRIPTION_KEY")
 
-def get_thresholds(machine_type: str) -> list:
-    """Get all thresholds for a machine type from Cosmos DB"""
+def get_knowledge_data(machine_type: str) -> dict:
+    """Get all knowledge base information for a machine type from Cosmos DB"""
     try:
         query = f"SELECT * FROM c WHERE c.machineType = '{machine_type}'"
-        items = list(thresholds_container.query_items(
+        items = list(knowledge_container.query_items(
             query=query,
             enable_cross_partition_query=True
         ))
         return items
     except Exception as e:
-        return [{"error": str(e)}]
+        return {"error": str(e)}
 
 
 def get_machine_data(machine_id: str) -> dict:
@@ -69,41 +68,33 @@ async def main():
         async with (
             AzureCliCredential() as credential,
             AzureAIClient(credential=credential).create_agent(
-                    name="AnomalyClassificationAgent",
-                    instructions="""You are a Anomaly Classification Agent evaluating machine anomalies for warning and critical threshold violations.
-                        You will receive anomaly data for a given machine. Your task is to:
-                        - Validate each metric against the threshold values 
-                        - Raise an alert for maintenance if any critical or warning violations were found
+                    name="FaultDiagnosisAgent",
+                    instructions="""You are a Fault Diagnosis Agent evaluating the root cause of maintenance alerts
+                        You will receive detected sensor deviations for a given machine. Your task is to:
+                        - Find the most likely root cause for the deviation 
 
                         You have access to the following tools:
-                        - Machine data: fetch machine information such as type for a particular machine id
-                        - get_thresholds: fetch threshold rules for different metrics per machine type
+                        - get_knowledge_data: fetch knowledge base information for possible causes 
+                        - get_machine_data: fetch machine information such as maintenance history and type for a particular machine id
 
-                        Use these functions to extract and validate the anomaly data.
+                        Use these functions to determnine the root cause for each alert
+                        
 
-                        Output should be:
-                        - alerts with format:
-                            {
-                            "status": "high" | "medium",
-                            "alerts": [ {"name": "metricName1", "severity": "threshold", "description": "metric1 exceeded value x}, { "name": "metricName2", ... ],
-                            "summary": {
-                                "totalRecordsProcessed": <int>,
-                                "violations": { "critical": <int>, "warning": <int> }
-                            }
-                            }
-                        - summary: human readable summary of the anomalies 
+                        Output should be a summary of the most likely root cause
+                
 
                         """,
-                    tools = [HostedMCPTool( name="Machine Data", url=mcp_endpoint, approval_mode="never_require",headers={"Ocp-Apim-Subscription-Key": mcp_subscription_key}), get_thresholds]
+                    tools = [get_machine_data, get_knowledge_data]
 
                     ) as agent,
                 ):
 
-                    print(f"✅ Created Anomaly Classification Agent: {agent.id}")
+                    print(f"✅ Created Fault Diagnosis Agent: {agent.id}")
                     # Test the agent with a simple query
                     print("\n🧪 Testing the agent with a sample query...")
                     try:
-                        result = await agent.run('Hello, can you classify the following anomalies for machine-001: [{"metric": "curing_temperature", "value": 179.2},{"metric": "cycle_time", "value": 14.5}]')
+
+                        result = await agent.run("Hello, what can the issue be when machine-001 has curing temperature reading of 179.2°C that exceeds warning threshold of 178°C?")
                         print(f"✅ Agent response: {result.text}")
                     except Exception as test_error:
                         print(
