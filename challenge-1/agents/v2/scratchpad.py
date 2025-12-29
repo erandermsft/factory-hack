@@ -1,106 +1,81 @@
-# import asyncio
-# import os
-# from agent_framework import ChatAgent
-# from agent_framework.azure import AzureAIClient
-# from azure.ai.projects.aio import AIProjectClient
-# from azure.identity.aio import AzureCliCredential
-# from agent_framework import HostedWebSearchTool, HostedMCPTool
+# List knowledge sources by name and type
+import requests
+import json
+import os
+from azure.core.credentials import AzureKeyCredential
+from azure.search.documents.indexes import SearchIndexClient
+from azure.search.documents.indexes.models import AzureBlobKnowledgeSource, AzureBlobKnowledgeSourceParameters, KnowledgeBaseAzureOpenAIModel, AzureOpenAIVectorizerParameters, KnowledgeSourceAzureOpenAIVectorizer, KnowledgeSourceContentExtractionMode, KnowledgeSourceIngestionParameters
 
-# async def main():
-#     async with (
-#         AzureCliCredential() as credential,
-#         AIProjectClient(
-#             endpoint=os.environ["AZURE_FOUNDRY_PROJECT_ENDPOINT"],  # or AZURE_AI_PROJECT_ENDPOINT
-#             credential=credential
-#         ) as project_client,
-#             AzureAIClient(
-#                 project_client=project_client,
-#                 agent_name="PersistentAgent",
-#                 model_deployment_name=os.environ["AZURE_FOUNDRY_MODEL_DEPLOYMENT_NAME"],  # or AZURE_AI_MODEL_DEPLOYMENT_NAME
-#                 instructions="You are a document assistant v2",
-#                 tools=[
-#                     HostedMCPTool(
-#                         name="Microsoft Learn MCP",
-#                         url="https://learn.microsoft.com/api/mcp"
-#                     )
-#                 ]
-#                     ).create_agent() as agent,
-#             ):
+search_endpoint = os.environ.get("SEARCH_SERVICE_ENDPOINT")
+storage_connection_string = os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
+search_key = os.environ.get("SEARCH_ADMIN_KEY")
+endpoint = f"{search_endpoint}/knowledgesources"
+params = {"api-version": "2025-11-01-preview", "$select": "name, kind"}
+headers = {"api-key": search_key}
+knowledge_source_name="machine-wiki-blob-ks"
 
-#         result = await agent.run("How do I create an Azure storage account?")
-#         print(result.text)
 
-# asyncio.run(main())
+def get_all_knowledge_sources():
+    response = requests.get(f"{endpoint}", params = params, headers = headers)
+    print(json.dumps(response.json(), indent = 2))
 
-# import asyncio
-# from agent_framework.azure import AzureAIClient
-# from azure.identity.aio import AzureCliCredential
+def get_knowledge_source(name=knowledge_source_name):
+    response = requests.get(f"{endpoint}/{name}", params = params, headers = headers)
+    print(json.dumps(response.json(), indent = 2))
 
-# async def main():
-#     async with (
-#         AzureCliCredential() as credential,
-#         AzureAIClient(credential=credential).create_agent(
-#             instructions="You are very good at telling jokes. V3 agent",
-#             name='ScratchPadAgent2',
+def get_index_status():
+    response = requests.get(f"{endpoint}/{knowledge_source_name}/status", params = params, headers = headers)
+    print(json.dumps(response.json(), indent = 2))
 
-#         ) as agent,
-#     ):
-#         result = await agent.run("Tell me a joke about a pirate.")
-#         print(result.text)
+def delete_knowledge_source(name=knowledge_source_name):
+    index_client = SearchIndexClient(endpoint = search_endpoint, credential = AzureKeyCredential(search_key))
+    index_client.delete_knowledge_source(knowledge_source_name)
+    print(f"Knowledge source deleted successfully.")
 
-# if __name__ == "__main__":
-#     asyncio.run(main())
-# import asyncio
-# from agent_framework.azure import AzureAIAgentClient
-# from azure.identity.aio import AzureCliCredential
+def create_knowledge_source():
+    index_client = SearchIndexClient(endpoint = search_endpoint, credential = AzureKeyCredential(search_key))
 
-# async def main():
-#     async with (
-#         AzureCliCredential() as credential,
-#         AzureAIAgentClient(credential=credential).create_agent(
-#             name="HelperAgent",
-#             instructions="You are a helpful assistant."
-#         ) as agent,
-#     ):
-#         result = await agent.run("Hello!")
-#         print(result.text)
+    knowledge_source = AzureBlobKnowledgeSource(
+        name = knowledge_source_name,
+        description = "This knowledge source pulls from a blob storage container.",
+        encryption_key = None,
+        azure_blob_parameters = AzureBlobKnowledgeSourceParameters(
+            connection_string = storage_connection_string,
+            container_name = "machine-wiki",
+            folder_path = None,
+            is_adls_gen2 = False,
+            ingestion_parameters = KnowledgeSourceIngestionParameters(
+                identity = None,
+                disable_image_verbalization = False,
+                chat_completion_model = KnowledgeBaseAzureOpenAIModel(
+                    azure_open_ai_parameters = AzureOpenAIVectorizerParameters(
+                        resource_url=os.environ.get("AZURE_OPENAI_ENDPOINT"),
+                        deployment_name="gpt-4.1",
+                        api_key=os.environ.get("AZURE_OPENAI_KEY"),
+                        model_name="gpt-4.1"
+                    )
+                ),
+                embedding_model = KnowledgeSourceAzureOpenAIVectorizer(
+                    azure_open_ai_parameters=AzureOpenAIVectorizerParameters(
+                        resource_url=os.environ.get("AZURE_OPENAI_ENDPOINT"),
+                        deployment_name="text-embedding-ada-002",
+                        api_key=os.environ.get("AZURE_OPENAI_KEY"),
+                        model_name="text-embedding-ada-002"
+                    )
+                ),
+                content_extraction_mode = KnowledgeSourceContentExtractionMode.MINIMAL,
+                ingestion_schedule = None,
+                ingestion_permission_options = None
+            )
+        )
+    )
 
-# asyncio.run(main())
-# import asyncio
-# import os
-# from agent_framework import ChatAgent
-# from agent_framework.azure import AzureAIAgentClient
-# from azure.ai.projects.aio import AIProjectClient
-# from azure.identity.aio import AzureCliCredential
+    index_client.create_or_update_knowledge_source(knowledge_source)
+    print(f"Knowledge source '{knowledge_source.name}' created or updated successfully.")
 
-# async def main():
-#     async with (
-#         AzureCliCredential() as credential,
-#         AIProjectClient(
-#             endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
-#             credential=credential
-#         ) as project_client,
-#     ):
-#         # Create a persistent agent
-#         created_agent = await project_client.agents.create_agent(
-#             model=os.environ["AZURE_AI_MODEL_DEPLOYMENT_NAME"],
-#             name="PersistentAgent",
-#             instructions="You are a helpful assistant."
-#         )
-
-#         try:
-#             # Use the agent
-#             async with ChatAgent(
-#                 chat_client=AzureAIAgentClient(
-#                     project_client=project_client,
-#                     agent_id=created_agent.id
-#                 ),
-#                 instructions="You are a helpful assistant."
-#             ) as agent:
-#                 result = await agent.run("Hello!")
-#                 print(result.text)
-#         finally:
-#             # Clean up the agent
-#             await project_client.agents.delete_agent(created_agent.id)
-
-# asyncio.run(main())
+create_knowledge_source()
+#delete_knowledge_source()
+#get_knowledge_source()
+#get_index_status()
+#get_all_knowledge_sources()
+#get_knowledge_source("ks-azureblob-224")
