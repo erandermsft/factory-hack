@@ -49,7 +49,7 @@ async def main():
 
                         You have access to the following tools:
                         - get_knowledge_data: fetch knowledge base information for possible causes 
-                        - get_machine_data: fetch machine information such as maintenance history and type for a particular machine id
+                        - Machine data: fetch machine information such as maintenance history and type for a particular machine id
 
                         Use these functions to determnine the root cause for each alert
                         
