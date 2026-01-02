@@ -10,7 +10,7 @@ Usage:
     python maintenance_scheduler.py [WORK_ORDER_ID]
     
 Example:
-    python maintenance_scheduler.py WO-001
+    python maintenance_scheduler.py wo-2024-468
 """
 import os
 import sys
@@ -27,6 +27,15 @@ from agent_framework import ChatAgent
 from agent_framework_azure_ai import AzureAIAgentClient
 from pydantic import Field
 from dotenv import load_dotenv
+
+# Azure AI Tracing with Agent Framework
+try:
+    from agent_framework.observability import configure_otel_providers, enable_instrumentation
+    from azure.monitor.opentelemetry.exporter import AzureMonitorTraceExporter, AzureMonitorMetricExporter, AzureMonitorLogExporter
+    TRACING_AVAILABLE = True
+except ImportError:
+    TRACING_AVAILABLE = False
+    print("⚠️  Agent Framework observability not available.")
 
 logger = logging.getLogger(__name__)
 load_dotenv(override=True)
@@ -550,12 +559,34 @@ async def main():
     database_name = os.getenv("COSMOS_DATABASE_NAME")
     foundry_project_endpoint = os.getenv("FOUNDRY_PROJECT_ENDPOINT")
     deployment_name = os.getenv("FOUNDRY_MODEL_DEPLOYMENT_NAME", "gpt-4o")
+    app_insights_connection = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING")
     
     # Validate
     if not all([cosmos_endpoint, cosmos_key, database_name, foundry_project_endpoint]):
         print("Error: Missing required environment variables.")
         print("Required: COSMOS_ENDPOINT, COSMOS_KEY, COSMOS_DATABASE_NAME, FOUNDRY_PROJECT_ENDPOINT")
         return
+    
+    # Enable Azure AI Tracing with Agent Framework
+    if TRACING_AVAILABLE and app_insights_connection:
+        try:
+            # Configure OpenTelemetry with Azure Monitor exporters
+            # This sends traces directly to Application Insights/Azure AI Foundry
+            trace_exporter = AzureMonitorTraceExporter.from_connection_string(app_insights_connection)
+            metric_exporter = AzureMonitorMetricExporter.from_connection_string(app_insights_connection)
+            log_exporter = AzureMonitorLogExporter.from_connection_string(app_insights_connection)
+            
+            configure_otel_providers(
+                enable_sensitive_data=True,  # Capture prompts and completions
+                exporters=[trace_exporter, metric_exporter, log_exporter]
+            )
+            print("📊 Agent Framework tracing enabled (Azure Monitor)")
+            print(f"   Traces sent to: {app_insights_connection.split(';')[0]}")
+            print("   View in Azure AI Foundry portal: https://ai.azure.com -> Your Project -> Tracing\n")
+        except Exception as e:
+            print(f"⚠️  Tracing setup failed: {e}\n")
+    elif TRACING_AVAILABLE:
+        print("⚠️  Tracing available but APPLICATIONINSIGHTS_CONNECTION_STRING not set\n")
     
     # Initialize
     cosmos_service = CosmosDbService(cosmos_endpoint, cosmos_key, database_name)
@@ -568,16 +599,17 @@ async def main():
         try:
             from azure.ai.projects.models import PromptAgentDefinition
             
-            # Get current agent version
-            current_version = 0
+            # Get current agent version from portal
+            print("   Checking existing agent versions in portal...")
+            version_count = 0
             try:
-                async for agent in project_client.agents.list():
-                    if agent.name == "MaintenanceSchedulerAgent" and agent.metadata:
-                        current_version = max(current_version, float(agent.metadata.get("version", "0")))
-            except:
-                pass
+                async for version_obj in project_client.agents.list_versions(agent_name="MaintenanceSchedulerAgent"):
+                    version_count += 1
+                print(f"   Found {version_count} existing versions")
+            except Exception as e:
+                print(f"   Error checking versions: {e}")
             
-            new_version = current_version + 1
+            print(f"   Creating new version (will be version #{version_count + 1})...")
             
             # Create agent definition
             definition = PromptAgentDefinition(
@@ -598,27 +630,37 @@ Consider factors like:
 Output JSON with: scheduled_date, risk_score (0-100), predicted_failure_probability (0-1), recommended_action (IMMEDIATE/URGENT/SCHEDULED/MONITOR), and reasoning.""",
             )
             
-            # Create new version
-            logger.info(f"Creating MaintenanceSchedulerAgent version {new_version}")
+            # Create new version - Azure auto-assigns version number
+            print(f"   Registering MaintenanceSchedulerAgent in Azure AI Foundry portal...")
             registered_agent = await project_client.agents.create_version(
                 agent_name="MaintenanceSchedulerAgent",
                 definition=definition,
-                description=f"Predictive maintenance scheduling agent v{new_version}",
+                description=f"Predictive maintenance scheduling agent",
                 metadata={
-                    "version": str(new_version),
                     "framework": "agent-framework",
-                    "purpose": "maintenance_scheduling"
+                    "purpose": "maintenance_scheduling",
+                    "timestamp": datetime.utcnow().isoformat()
                 }
             )
-            logger.info(f"MaintenanceSchedulerAgent v{new_version} registered in portal")
+            print(f"   ✅ New version created!")
+            print(f"      Agent ID: {registered_agent.id if hasattr(registered_agent, 'id') else 'N/A'}")
+            
+            # Verify it was created
+            print(f"   Verifying creation...")
+            verify_count = 0
+            async for v in project_client.agents.list_versions(agent_name="MaintenanceSchedulerAgent"):
+                verify_count += 1
+            print(f"   Total versions now in portal: {verify_count}")
+            print(f"   Check portal at: https://ai.azure.com\n")
         except Exception as e:
+            print(f"   ⚠️  Could not register agent in portal: {e}\n")
             logger.warning(f"Could not register agent in portal: {e}")
     
     agent_service = MaintenanceSchedulerAgent(foundry_project_endpoint, deployment_name, cosmos_service)
     
     # Get work order
     print("1. Retrieving work order...")
-    work_order_id = sys.argv[1] if len(sys.argv) > 1 else "WO-001"
+    work_order_id = sys.argv[1] if len(sys.argv) > 1 else "wo-2024-468"
     
     try:
         work_order = await cosmos_service.get_work_order(work_order_id)
