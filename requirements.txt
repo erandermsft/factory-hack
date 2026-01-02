@@ -1,0 +1,12 @@
+# Microsoft Agent Framework (requires --pre flag)
+agent-framework-azure-ai
+
+# Azure dependencies
+azure-cosmos>=4.5.0
+azure-identity>=1.15.0
+
+# Data handling
+dataclasses-json>=0.6.0
+
+# Development dependencies
+python-dotenv>=1.0.0

@@ -2,6 +2,53 @@
 
 **Expected Duration:** 60 minutes
 
+## 🚀 Quick Start (Python Implementation)
+
+This challenge is implemented in **Python** using the **Microsoft Agent Framework** with Azure AI Foundry integration.
+
+### Files in this Challenge
+
+- `maintenance_scheduler.py` - Self-contained predictive maintenance scheduling agent
+- `parts_ordering.py` - Self-contained parts ordering automation agent
+- `README.md` - This file
+
+### Installation
+
+```bash
+# From the workspace root:
+cd /workspaces/factory-ops-hack
+
+# Install dependencies (--pre flag required while in preview)
+pip install --pre -r requirements.txt
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your credentials
+
+# Authenticate with Azure
+az login
+```
+
+### Run the Agents
+
+```bash
+# Navigate to challenge-3
+cd challenge-3
+
+# Run Maintenance Scheduler Agent
+python maintenance_scheduler.py wo-2024-445
+
+# Run Parts Ordering Agent  
+python parts_ordering.py wo-2024-456
+```
+
+**Note:** The agents will automatically register themselves in the Azure AI Foundry portal when they run. You can view them at:
+- **Portal URL**: https://ai.azure.com
+- Navigate to your project → Build → Agents/Assistants
+- Look for: `MaintenanceSchedulerAgent` and `PartsOrderingAgent`
+
+---
+
 ## Introduction
 
 In this challenge, you'll build two specialized AI agents that work together to optimize factory operations through intelligent maintenance scheduling and automated supply chain management:
@@ -103,116 +150,110 @@ Example document in ChatHistories container:
 3. **Request** for Machine-002 → Creates separate chat history, independent from Machine-001
 4. **Service restart** → Chat histories persist in Cosmos DB, no memory lost
 
-## 1. Create Maintenance Scheduler Agent
+## Agent Architecture
 
-1. Edit `MaintenanceSchedulerAgent/CreateAgent.cs`:
-   - Uncomment line 12: `static async Task Main(string[] args)`
-   - Comment out line 13: `// static async Task MainCreate(string[] args)`
+Both agents are **self-contained Python files** that include:
+- Data models (dataclasses)
+- Cosmos DB service layer
+- AI agent logic with Microsoft Agent Framework
+- Portal registration using Azure AI Projects SDK
+- Main execution workflow
 
-2. Edit `MaintenanceSchedulerAgent/Program.cs`:
-   - Comment out line 9: `// static async Task Main(string[] args)`
+### Key Features
 
-3. Run the creation script:
-```bash
-cd /workspaces/factory-ops-hack/challenge-3/MaintenanceSchedulerAgent
-set -a && source ../../.env && set +a
-dotnet run
-```
+✅ **Portal Registration**: Agents automatically register in Azure AI Foundry portal with versioning  
+✅ **Chat History Memory**: Conversation context persisted in Cosmos DB per entity (machine/work order)  
+✅ **Self-Contained**: No imports between files - each agent is fully independent  
+✅ **Azure Authentication**: Uses `DefaultAzureCredential` for seamless Azure authentication  
+✅ **Production-Ready**: Error handling, async/await, proper resource cleanup  
 
-**What gets created:**
-- ✓ Maintenance Scheduler Agent (visible in the NEW Azure AI Foundry portal at https://ai.azure.com/nextgen)
-- ✓ Agent specialized in finding optimal maintenance windows with minimal production disruption
-- ✓ Configuration includes production schedule analysis, resource availability, and downtime optimization
-
-**Note:** The agent is created in the portal using `PersistentAgentsClient`, but the actual execution uses direct Azure OpenAI API calls with chat history stored in Cosmos DB. The portal agent serves as a configuration reference.
-
-## 2. Create Parts Ordering Agent
-
-1. Edit `PartsOrderingAgent/CreateAgent.cs`:
-   - Uncomment `static async Task Main(string[] args)`
-   - Comment out the alternative Main method name
-
-2. Edit `PartsOrderingAgent/Program.cs`:
-   - Comment out `static async Task Main(string[] args)`
-
-3. Run the creation script:
-```bash
-cd /workspaces/factory-ops-hack/challenge-3/PartsOrderingAgent
-set -a && source ../../.env && set +a
-dotnet run
-```
-
-Copy the Agent IDs from the output and they will be automatically added to your `.env` file.
-
-## 3. Configure Environment Variables
-
-Your `.env` file should contain (automatically added during creation):
+## Running the Maintenance Scheduler Agent
 
 ```bash
-MAINTENANCE_SCHEDULER_AGENT_ID=<maintenance-scheduler-agent-id>
-PARTS_ORDERING_AGENT_ID=<parts-ordering-agent-id>
-COSMOS_DATABASE_NAME=FactoryOpsDB
-```
-
-**Note:** The current implementation expects specific Cosmos DB containers (WorkOrders, Machines, Telemetry, etc.) created by Challenge 0. If you encounter "container not found" errors, verify that Challenge 0 data seeding completed successfully.
-
-## 4. Running the Maintenance Scheduler Agent
-
-**Before running, ensure you've reverted the Main method edits:**
-1. Edit `MaintenanceSchedulerAgent/Program.cs`: Uncomment line 9 `static async Task Main(string[] args)`
-2. Edit `MaintenanceSchedulerAgent/CreateAgent.cs`: Comment out line 12 `// static async Task Main(string[] args)`
-
-```bash
-cd /workspaces/factory-ops-hack/challenge-3/MaintenanceSchedulerAgent
-set -a && source ../../.env && set +a
-dotnet run wo-2024-445
+cd /workspaces/factory-ops-hack/challenge-3
+python maintenance_scheduler.py wo-2024-445
 ```
 
 **Expected Output:**
-1. ✓ Retrieves work order from Cosmos DB (ERP container)
-2. ✓ Analyzes production schedules and capacity (MES container)
-3. ✓ Checks technician and resource availability
-4. ✓ Evaluates maintenance windows for minimal disruption
-5. ✓ Saves optimal maintenance schedule to Cosmos DB
-6. ✓ Updates work order status to 'Scheduled'
+1. ✓ Registers agent in Azure AI Foundry portal (if not already registered)
+2. ✓ Retrieves work order from Cosmos DB
+3. ✓ Analyzes historical maintenance data
+4. ✓ Checks available maintenance windows (14-day window)
+5. ✓ Runs AI predictive analysis with chat history context
+6. ✓ Generates maintenance schedule with risk scoring
+7. ✓ Saves schedule to Cosmos DB
+8. ✓ Updates work order status to 'Scheduled'
 
-**What it does:**
+**What the agent does:**
 - Analyzes production schedules and identifies low-impact periods
-- Evaluates resource availability (technicians, parts, equipment)
-- Calculates production impact and revenue loss for different windows
-- Recommends optimal maintenance timing with justification
-- Coordinates dependencies and constraints
-- Balances urgency against production needs
-- Considers production impact and urgency
+- Evaluates historical maintenance patterns for the machine
+- Calculates risk scores (0-100) and failure probability
+- Recommends actions: IMMEDIATE, URGENT, SCHEDULED, or MONITOR
+- Maintains chat history per machine for contextual learning
+- Balances urgency against production impact
 
-## 5. Running the Parts Ordering Agent
+**Sample Output:**
+```
+=== Predictive Maintenance Agent ===
 
-**Before running, ensure you've reverted the Main method edits:**
-1. Edit `PartsOrderingAgent/Program.cs`: Uncomment `static async Task Main(string[] args)`
-2. Edit `PartsOrderingAgent/CreateAgent.cs`: Comment out `static async Task Main(string[] args)`
+1. Retrieving work order...
+   ✓ Work Order: wo-2024-445
+   Machine: machine-001
+   Priority: high
+
+2. Analyzing historical maintenance data...
+   ✓ Found 0 historical maintenance records
+
+3. Checking available maintenance windows...
+   ✓ Found 14 available windows in next 14 days
+
+4. Running AI predictive analysis...
+   Using persistent chat history for machine: machine-001
+   ✓ Analysis complete!
+
+=== Predictive Maintenance Schedule ===
+Schedule ID: sched-1767354115.311513
+Machine: machine-001
+Scheduled Date: 2026-01-03 22:00
+Window: 22:00 - 06:00
+Production Impact: Low
+Risk Score: 85/100
+Failure Probability: 70.0%
+Recommended Action: URGENT
+
+5. Saving maintenance schedule...
+   ✓ Schedule saved to Cosmos DB
+
+6. Updating work order status...
+   ✓ Work order status updated to 'Scheduled'
+
+✓ Predictive Maintenance Agent completed successfully!
+```
+
+## Running the Parts Ordering Agent
 
 ```bash
-cd /workspaces/factory-ops-hack/challenge-3/PartsOrderingAgent
-set -a && source ../../.env && set +a
-dotnet run wo-2024-456
+cd /workspaces/factory-ops-hack/challenge-3
+python parts_ordering.py wo-2024-456
 ```
 
 **Expected Output:**
-1. ✓ Retrieves work order from Cosmos DB
-2. ✓ Checks inventory status for required parts (WMS container)
-3. ✓ Identifies parts needing ordering
-4. ✓ Finds available suppliers (SCM container)
-5. ✓ Generates optimized parts order using AI
-6. ✓ Saves order to SCM system
-7. ✓ Updates work order status to 'PartsOrdered'
+1. ✓ Registers agent in Azure AI Foundry portal (if not already registered)
+2. ✓ Retrieves work order from Cosmos DB
+3. ✓ Checks inventory status for required parts
+4. ✓ Identifies parts needing ordering
+5. ✓ Finds available suppliers from SCM system
+6. ✓ Generates optimized parts order using AI
+7. ✓ Saves order to Cosmos DB
+8. ✓ Updates work order status
 
-**What it does:**
-- Analyzes inventory levels against reorder points
-- Selects optimal suppliers based on reliability and lead time
+**What the agent does:**
+- Checks current inventory levels vs reorder points
+- Evaluates supplier reliability, lead time, and costs
+- Generates optimal parts orders with supplier selection
+- Maintains chat history per work order for learning
 - Calculates expected delivery dates
-- Optimizes order costs
-- Determines order urgency
-Chat history per machine
+- Optimizes order costs while meeting urgency requirements
 
 
 **How it works:**
@@ -228,20 +269,39 @@ Chat history per machine
 - **Entity-Specific**: Each machine/work order maintains its own conversation context
 - **Transparent**: Easy to inspect, debug, and understand stored conversation data
 
+## Viewing Agents in Azure AI Foundry Portal
+
+After running the agents, you can view them in the Azure AI Foundry portal:
+
+1. **Navigate to**: https://ai.azure.com
+2. **Select your project**: Look for your project (e.g., `msagthack-aiproject-...`)
+3. **Go to**: Build → Agents (or Assistants)
+4. **You should see**:
+   - `MaintenanceSchedulerAgent` - Predictive maintenance scheduling
+   - `PartsOrderingAgent` - Parts ordering automation
+
+Each agent includes:
+- Model configuration (gpt-4.1-mini)
+- System instructions
+- Version metadata
+- Creation timestamp
+
+
 ## Learn More
 
-Congratulations! You've built two AI agents that work together to optimize maintenance scheduling and automated parts ordering. You've learned how to:
+Congratulations! You've successfully deployed two AI agents using the Microsoft Agent Framework. You've learned how to:
 
-✅ Create persistent agents programmatically using Microsoft Agent Framework  
-✅ Implement chat history memory with Cosmos DB persistence  
-✅ Use direct Azure OpenAI API calls for agent execution  
-✅ Integrate agents with Cosmos DB for data access and memory storage  
-✅ Manage conversation context across multiple sessions  
-✅ Build AI-powered decision systems for industrial operations  
+✅ **Build self-contained agents** - Complete agent logic in single Python files  
+✅ **Register agents in Azure AI Foundry** - Programmatic portal registration with versioning  
+✅ **Implement chat history memory** - Persistent conversation context in Cosmos DB  
+✅ **Use Microsoft Agent Framework** - Modern agent architecture with `ChatAgent`  
+✅ **Integrate with Azure services** - Cosmos DB, Azure AI Foundry, Azure OpenAI  
+✅ **Manage conversation context** - Entity-specific memory (per machine/work order)  
+✅ **Build production-ready agents** - Error handling, async/await, resource cleanup  
 
 These agents demonstrate how AI can optimize factory operations by:
 - Finding optimal maintenance windows that minimize production disruption
-- Analyzing production schedules, resources, and constraints for intelligent scheduling
+- Analyzing historical patterns and risk factors for intelligent scheduling
 - Automating inventory management and supplier selection
-- Maintaining conversation context across sessions for contextual decision-making
-- Learning from previous interactions stored in chat history
+- Maintaining conversation context for contextual decision-making
+- Learning from previous interactions to improve recommendations
