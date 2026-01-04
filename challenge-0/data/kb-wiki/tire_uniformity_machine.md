@@ -11,11 +11,11 @@ last_reviewed: 2025-12-29
 This page summarizes common issues, diagnostic steps, and fixes for tire uniformity testing.
 
 ## Operating Thresholds
+
 - RFV (Radial Force Variation): target ≤ 100 N (high if exceeds 100 N)
 
----
-
 ## High Radial Force Variation (Priority: High)
+
 - Symptoms: RFV exceeds 100 N; tire vibration concerns; customer complaints; failed quality tests
 - Likely Causes: Building process inconsistency; curing press issues; material non-uniformity; mold damage; green tire storage conditions
 - Diagnostics:
@@ -34,6 +34,7 @@ This page summarizes common issues, diagnostic steps, and fixes for tire uniform
 - Impact: Customer satisfaction; ride quality
 
 ## Load Cell Drift (Priority: Medium)
+
 - Symptoms: Inconsistent measurements; calibration check failures; trending data shift
 - Likely Causes: Load cell aging; temperature variations; mechanical binding; electrical noise interference; previous mechanical shock
 - Diagnostics:
@@ -54,5 +55,6 @@ This page summarizes common issues, diagnostic steps, and fixes for tire uniform
 ---
 
 ## Notes
+
 - Keep calibration artifacts controlled; trend drift vs. ambient temperature.
 - Ensure test recipes and tire genealogy remain synchronized with production.

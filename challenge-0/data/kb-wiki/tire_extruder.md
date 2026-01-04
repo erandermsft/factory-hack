@@ -11,12 +11,12 @@ last_reviewed: 2025-12-29
 This page summarizes common issues, diagnostic steps, and fixes for tire compound extrusion.
 
 ## Operating Thresholds
+
 - Barrel temperature: normal ≤ 118°C (overheating if above 118°C)
 - Throughput: target ≥ 650 kg/h (low throughput if below 650 kg/h)
 
----
-
 ## Extruder Barrel Overheating (Priority: High)
+
 - Symptoms: Temperature exceeds 118°C; material degradation; smoke from die; discolored compound
 - Likely Causes: Cooling system failure; screw wear causing excessive friction; material residence time too long; temperature control malfunction; blocked cooling passages
 - Diagnostics:
@@ -35,6 +35,7 @@ This page summarizes common issues, diagnostic steps, and fixes for tire compoun
 - Impact: Material quality; compound properties compromised
 
 ## Low Material Throughput (Priority: Medium)
+
 - Symptoms: Output below 650 kg/h; production bottleneck; inconsistent extrusion rate
 - Likely Causes: Screw wear reducing pumping efficiency; die restriction or blockage; feed throat bridging; motor drive issues; material feed problems
 - Diagnostics:
@@ -55,5 +56,6 @@ This page summarizes common issues, diagnostic steps, and fixes for tire compoun
 ---
 
 ## Notes
+
 - Trend temperature vs. motor load to spot friction-related wear.
 - Include die cleaning in preventive maintenance to stabilize throughput.

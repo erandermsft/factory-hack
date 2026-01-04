@@ -19,6 +19,8 @@ database = cosmos_client.get_database_client("FactoryOpsDB")
 thresholds_container = database.get_container_client("Thresholds")
 machines_container = database.get_container_client("Machines")
 
+# MCP configuration
+# TODO: add subscription key and MCP endpoint
 
 def get_thresholds(machine_type: str) -> list:
     """Get all thresholds for a machine type from Cosmos DB"""
@@ -88,10 +90,7 @@ async def main():
                 # Test the agent with a simple query
                 print("\n🧪 Testing the agent with a sample query...")
                 try:
-
-                    #result = await agent.run('Hello, can you classify the following metric for machine-002: [{"metric": "drum_vibration", "value": 2.1}]')
-                    result = await agent.run('Hello, can you classify the following metric for machine-005: [{"metric": "mixing_temperature", "value": 175}]')
-                    #result = await agent.run('Hello, can you classify the following anomalies for machine-007: [{"metric": "curing_temperature", "value": 179.2},{"metric": "cycle_time", "value": 14.5}]')
+                    result = await agent.run('Hello, can you classify the following anomalies for machine-001: [{"metric": "curing_temperature", "value": 179.2},{"metric": "cycle_time", "value": 14.5}]')
                     print(f"✅ Agent response: {result.text}")
                 except Exception as test_error:
                     print(

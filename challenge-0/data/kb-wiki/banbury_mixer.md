@@ -11,12 +11,12 @@ last_reviewed: 2025-12-29
 This page summarizes common issues, diagnostic steps, and fixes for Banbury mixing operations.
 
 ## Operating Thresholds
+
 - Mixing temperature: normal ≤ 160°C (excessive if above 160°C)
 - Mixer vibration: normal ≤ 5.5 mm/s (excessive if above 5.5 mm/s)
 
----
-
 ## Mixing Temperature Excessive (Priority: High)
+
 - Symptoms: Temperature above 160°C; compound scorching; rotor drive overload; poor compound quality
 - Likely Causes: Excessive mixing speed; prolonged mixing time; inadequate cooling water; rotor tip wear; overloaded batch size
 - Diagnostics:
@@ -35,6 +35,7 @@ This page summarizes common issues, diagnostic steps, and fixes for Banbury mixi
 - Impact: Compound properties; cure characteristics
 
 ## Excessive Mixer Vibration (Priority: High)
+
 - Symptoms: Vibration above 5.5 mm/s; unusual noise; foundation cracking; safety concerns
 - Likely Causes: Rotor imbalance from uneven compound buildup; bearing wear; misaligned drive components; loose anchor bolts; gear wear
 - Diagnostics:
@@ -55,5 +56,6 @@ This page summarizes common issues, diagnostic steps, and fixes for Banbury mixi
 ---
 
 ## Notes
+
 - Include rotor cleaning in PM; trend vibration spectrum over time.
 - Confirm foundation integrity in audits to prevent progressive damage.

@@ -11,12 +11,14 @@ last_reviewed: 2025-12-29
 This page summarizes common issues, diagnostic steps, and fixes for tire building machines.
 
 ## Operating Thresholds
+
 - Drum vibration: normal ≤ 3.0 mm/s (excessive if above 3.0 mm/s)
 - Ply tension: normal ≤ 230 N (excessive if above 230 N)
 
 ---
 
 ## Building Drum Vibration (Priority: High)
+
 - Symptoms: Vibration above 3.0 mm/s; uneven tire build; material placement errors; unusual noise
 - Likely Causes: Bearing wear on drum shaft; drum imbalance; loose mounting bolts; misaligned drive components; worn coupling
 - Diagnostics:
@@ -35,6 +37,7 @@ This page summarizes common issues, diagnostic steps, and fixes for tire buildin
 - Impact: Tire build quality; uniformity issues
 
 ## Ply Tension Excessive (Priority: Medium)
+
 - Symptoms: Tension exceeds 230 N; material stretching; inconsistent tire dimensions; servo alarms
 - Likely Causes: Tension roller misalignment; servo motor tuning issues; material property variation; dancer arm malfunction; load cell calibration drift
 - Diagnostics:
@@ -55,5 +58,6 @@ This page summarizes common issues, diagnostic steps, and fixes for tire buildin
 ---
 
 ## Notes
+
 - Keep a maintenance log for alignment checks and PID tune changes.
 - Calibrate load cells routinely; verify after any mechanical interventions.

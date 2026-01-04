@@ -11,12 +11,12 @@ last_reviewed: 2025-12-29
 This page summarizes common issues, diagnostic steps, and fixes for tire curing presses.
 
 ## Operating Thresholds
+
 - Temperature: normal ≤ 178°C (excessive if above 178°C)
 - Curing cycle time: target ≤ 14 minutes (deviation if exceeds 14 min)
 
----
-
 ## Curing Temperature Excessive (Priority: High)
+
 - Symptoms: Temperature exceeds 178°C; tire surface scorching; extended cycle times; bladder damage
 - Likely Causes: Heating element malfunction; temperature sensor drift; steam pressure too high; thermostat failure; inadequate cooling water flow
 - Diagnostics:
@@ -35,6 +35,7 @@ This page summarizes common issues, diagnostic steps, and fixes for tire curing 
 - Impact: Tire quality defects; increased scrap rate
 
 ## Curing Cycle Time Deviation (Priority: High)
+
 - Symptoms: Cycle time exceeds 14 minutes; inconsistent cure; under- or over-cured tires
 - Likely Causes: Mold heating inefficiency; steam supply pressure drop; bladder leakage; control system programming error; worn mold seals
 - Diagnostics:
@@ -55,5 +56,6 @@ This page summarizes common issues, diagnostic steps, and fixes for tire curing 
 ---
 
 ## Notes
+
 - Maintain accurate sensor calibration and log periodic checks.
 - Track cycle time and temperature trends to detect drift early.

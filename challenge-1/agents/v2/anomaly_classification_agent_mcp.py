@@ -1,25 +1,12 @@
 import asyncio
 import os
-import importlib.util
-from pathlib import Path
-from typing import Annotated
-from agent_framework import HostedMCPTool
-from azure.identity.aio import AzureCliCredential
-from agent_framework import ChatAgent
-from agent_framework.azure import AzureAIAgentClient, AzureAIClient
-from azure.ai.projects.aio import AIProjectClient
 
+from agent_framework import HostedMCPTool
+from agent_framework.azure import AzureAIAgentClient
 from azure.cosmos import CosmosClient
-from pydantic import Field
+from azure.identity.aio import AzureCliCredential
 from dotenv import load_dotenv
-from azure.ai.agents.models import (
-    ListSortOrder,
-    McpTool,
-    RequiredMcpToolCall,
-    RunStepActivityDetails,
-    SubmitToolApprovalAction,
-    ToolApproval,
-)
+
 load_dotenv(override=True)
 
 # Configuration
@@ -37,6 +24,7 @@ thresholds_container = database.get_container_client("Thresholds")
 machines_container = database.get_container_client("Machines")
 mcp_endpoint = os.environ.get("MACHINE_MCP_SERVER_ENDPOINT")
 mcp_subscription_key = os.environ.get("APIM_SUBSCRIPTION_KEY")
+
 
 def get_thresholds(machine_type: str) -> list:
     """Get all thresholds for a machine type from Cosmos DB"""
@@ -69,8 +57,8 @@ async def main():
         async with (
             AzureCliCredential() as credential,
             AzureAIAgentClient(async_credential=credential).create_agent(
-                    name="AnomalyClassificationAgent",
-                    instructions="""You are a Anomaly Classification Agent evaluating machine anomalies for warning and critical threshold violations.
+                name="AnomalyClassificationAgent",
+                instructions="""You are a Anomaly Classification Agent evaluating machine anomalies for warning and critical threshold violations.
                         You will receive anomaly data for a given machine. Your task is to:
                         - Validate each metric against the threshold values 
                         - Raise an alert for maintenance if any critical or warning violations were found
@@ -94,22 +82,24 @@ async def main():
                         - summary: human readable summary of the anomalies 
 
                         """,
-                    tools = [HostedMCPTool( name="Machine Data", url=mcp_endpoint, approval_mode="never_require",headers={"Ocp-Apim-Subscription-Key": mcp_subscription_key}), get_thresholds]
+                tools=[HostedMCPTool(name="Machine Data", url=mcp_endpoint, approval_mode="never_require", 
+                                     headers={"Ocp-Apim-Subscription-Key": mcp_subscription_key}), 
+                                     get_thresholds]
 
-                    ) as agent,
-                ):
+            ) as agent,
+        ):
 
-                    print(f"✅ Created Anomaly Classification Agent: {agent.id}")
-                    # Test the agent with a simple query
-                    print("\n🧪 Testing the agent with a sample query...")
-                    try:
-                        result = await agent.run('Hello, can you classify the following anomalies for machine-001: [{"metric": "curing_temperature", "value": 179.2},{"metric": "cycle_time", "value": 14.5}]')
-                        print(f"✅ Agent response: {result.text}")
-                    except Exception as test_error:
-                        print(
-                            f"⚠️  Agent test failed (but agent was still created): {test_error}")
+            print(f"✅ Created Anomaly Classification Agent: {agent.id}")
+            # Test the agent with a simple query
+            print("\n🧪 Testing the agent with a sample query...")
+            try:
+                result = await agent.run('Hello, can you classify the following anomalies for machine-001: [{"metric": "curing_temperature", "value": 179.2},{"metric": "cycle_time", "value": 14.5}]')
+                print(f"✅ Agent response: {result.text}")
+            except Exception as test_error:
+                print(
+                    f"⚠️  Agent test failed (but agent was still created): {test_error}")
 
-                    #   return agent
+            #   return agent
 
     except Exception as e:
         print(f"❌ Error creating agent: {e}")
