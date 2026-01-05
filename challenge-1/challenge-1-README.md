@@ -171,9 +171,9 @@ The machine wiki contains knowledge (common issues, repair instructions and repa
 
 Create a knowledge source, knowledge base and project connection using the [create_knowledge_base.ipynb](./create_knowledge_base.ipynb) notebook.
 
-
 ### Step 3.4. Create the Fault Diagnosis Agent
-Let's create the **Fault Diagnosis Agent** and use our newly created Foundry IQ knowledge base. 
+
+Let's create the **Fault Diagnosis Agent** and use our newly created Foundry IQ knowledge base.
 
 Examine the Python code in [fault_diagnosis_agent.py](./agents/fault_diagnosis_agent.py)  
 A few things to observe:
@@ -181,7 +181,7 @@ A few things to observe:
 - The agent uses two MCP tools
   - `knowledge_base`: Retrieves machine wiki information for root cause analysis.
   - `machine_data`: Fetches details about machines such as id, model and maintenance history.
-- The agent is clearly instructed to use our machine knowledge base instead of its own knowledge. 
+- The agent is clearly instructed to use our machine knowledge base instead of its own knowledge.
 
 Run the code
 
