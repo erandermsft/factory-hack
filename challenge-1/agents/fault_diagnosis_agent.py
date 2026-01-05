@@ -40,9 +40,8 @@ async def main():
 
                     tools=[
                         HostedMCPTool(name="Machine Data", url=machine_data_mcp_endpoint, approval_mode="never_require",
-                                      headers={"Ocp-Apim-Subscription-Key": mcp_subscription_key}),
-                        HostedMCPTool(name="Knowledge Base", url=machine_wiki_mcp_endpoint, approval_mode="never_require", allowed_tools=["knowledge_base_retrieve"],
-                                      headers={"api-key": search_key})
+                                      headers={"Ocp-Apim-Subscription-Key": mcp_subscription_key})
+                        # TODO: add Foundry IQ MCP tool
                     ]
 
                 ) as agent,
