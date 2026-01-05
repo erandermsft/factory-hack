@@ -176,9 +176,24 @@ Create a knowledge source, knowledge base and project connection using the [crea
 Let's create the **Fault Diagnosis Agent** and use our newly created Foundry IQ knowledge base.
 
 Examine the Python code in [fault_diagnosis_agent.py](./agents/fault_diagnosis_agent.py)  
+
+Currently only one tool `machine_data` is available. Your task is to add the knowledge base MCP tool to the agent so the machine wiki content can be used when diagnosing the root cause of the anomaly.
+
+1. Locate placeholder comment `# TODO: add Foundry IQ MCP tool`  in [fault_diagnosis_agent.py](./agents/fault_diagnosis_agent.py)
+2. Add the knowledge base as a `HostedMCPTool` by updating the placeholder with the following code
+
+    ```python
+    
+    HostedMCPTool(name="Knowledge Base", url=machine_wiki_mcp_endpoint, approval_mode="never_require", allowed_tools=["knowledge_base_retrieve"],
+                  headers={"api-key": search_key})
+    ```
+
+    > [!TIP]
+    > The tools property is a list so make sure you add a trailing comma after the first tool
+
 A few things to observe:
 
-- The agent uses two MCP tools
+- The agent now uses two MCP tools
   - `knowledge_base`: Retrieves machine wiki information for root cause analysis.
   - `machine_data`: Fetches details about machines such as id, model and maintenance history.
 - The agent is clearly instructed to use our machine knowledge base instead of its own knowledge.
@@ -191,4 +206,10 @@ python fault_diagnosis_agent.py
 
 ```
 
-Verify the answer from the Agent
+Verify the answer from the agent
+
+## Conclusion 🎉
+
+Congratulations! You've successfully built two agents and equipped them with enterprise tools to perform their tasks.
+
+**Next Steps: Building the Repair Planner Agent with GitHub Copilot
