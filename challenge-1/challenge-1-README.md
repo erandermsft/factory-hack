@@ -27,8 +27,8 @@ A few things to observe:
 ### Step 1.2. Run the code
 
 ```bash
-cd challenge-1/agents
-python anomaly_classification_agent.py
+cd challenge-1
+python agents/anomaly_classification_agent.py
 
 ```
 
@@ -73,10 +73,10 @@ The Machine API is already available in API Management and contains endpoints fo
 
 ```bash
 # Get all machines
-curl -fsSL "$APIM_GATEWAY_URL/machines" -H "Ocp-Apim-Subscription-Key: $APIM_SUBSCRIPTION_KEY" -H "Accept: application/json"
+curl -fsSL "$APIM_GATEWAY_URL/machine" -H "Ocp-Apim-Subscription-Key: $APIM_SUBSCRIPTION_KEY" -H "Accept: application/json"
 
 # Get a specific machine
-curl -fsSL "$APIM_GATEWAY_URL/machines/machine-001" -H "Ocp-Apim-Subscription-Key: $APIM_SUBSCRIPTION_KEY" -H "Accept: application/json"
+curl -fsSL "$APIM_GATEWAY_URL/machine/machine-001" -H "Ocp-Apim-Subscription-Key: $APIM_SUBSCRIPTION_KEY" -H "Accept: application/json"
 ```
 
 ### Step 2.2. Expose Machine API as an MCP server
@@ -94,10 +94,13 @@ API Management provides an easy way to expose APIs as MCP servers without writin
     - **Name**: _get-machine-data_
     - **Description**: _Gets details about a specific machine_
 6. Click _Create_
-7. Finally, save the _MCP Server URL_ of the newly created MCP server, you will need it in the next part. Add a new entry with the value in the '.env' file:
+7. Finally, save the _MCP Server URL_ of the newly created MCP server, you will need it in the next part. Add a new entry with the value in the _.env_ file:
 
 ```bash
 MACHINE_MCP_SERVER_ENDPOINT=<MCP_SERVER_URL>
+
+# Reload the environment variables from file
+export $(cat ../.env | xargs)
 ```
 
 ### Step 2.3. Use the Machine MCP Server
@@ -117,7 +120,7 @@ Now its time to replace the direct database access with our new Machine MCP Serv
     mcp_subscription_key = os.environ.get("APIM_SUBSCRIPTION_KEY")
     ```
 
-3. locate the tools assignment
+3. locate the `tools` assignment
 
     ```python
     tools=[
@@ -139,8 +142,7 @@ Now its time to replace the direct database access with our new Machine MCP Serv
 Run the code
 
 ```bash
-cd challenge-1/agents
-python anomaly_classification_agent.py
+python agents/anomaly_classification_agent.py
 
 ```
 
@@ -169,7 +171,7 @@ The machine wiki contains knowledge (common issues, repair instructions and repa
 > [!NOTE]
 > [Foundry Agent Service](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/overview?view=foundry) orchestrates calls to the knowledge base via the MCP tool and synthesizes the final answer. At runtime, the agent calls only the knowledge base, not the data platform (such as **Azure Blob Storage** in our case) that underlies the knowledge source. The knowledge base handles all retrieval operations.
 
-Create a knowledge source, knowledge base and project connection using the [create_knowledge_base.ipynb](./create_knowledge_base.ipynb) notebook.
+Create a knowledge source and knowledge base using the [create_knowledge_base.ipynb](./create_knowledge_base.ipynb) notebook.
 
 ### Step 3.4. Create the Fault Diagnosis Agent
 
@@ -201,8 +203,7 @@ A few things to observe:
 Run the code
 
 ```bash
-cd challenge-1/agents
-python fault_diagnosis_agent.py 
+python agents/fault_diagnosis_agent.py 
 
 ```
 

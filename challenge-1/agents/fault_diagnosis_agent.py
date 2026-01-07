@@ -21,7 +21,7 @@ async def main():
     try:
         async with AzureCliCredential() as credential:
             async with (
-                AzureAIAgentClient(async_credential=credential).create_agent(
+                AzureAIAgentClient(credential=credential).create_agent(
                     name="FaultDiagnosisAgent",
                     instructions="""You are a helpful Fault Diagnosis Agent evaluating the root cause of maintenance alerts
                             You will receive detected sensor deviations for a given machine. Your task is to:
@@ -40,7 +40,7 @@ async def main():
 
                     tools=[
                         HostedMCPTool(name="Machine Data", url=machine_data_mcp_endpoint, approval_mode="never_require",
-                                      headers={"Ocp-Apim-Subscription-Key": mcp_subscription_key})
+                                      headers={"Ocp-Apim-Subscription-Key": mcp_subscription_key}),
                         # TODO: add Foundry IQ MCP tool
                     ]
 

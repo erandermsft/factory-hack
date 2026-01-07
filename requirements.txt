@@ -1,9 +1,13 @@
 # Microsoft Agent Framework (requires --pre flag)
 agent-framework-azure-ai
+agent-framework-azure-ai-search
+
+azure-ai-projects
 
 # Azure dependencies
 azure-cosmos>=4.5.0
 azure-identity>=1.15.0
+azure-search-documents>=11.7.0b2
 
 # Azure AI Tracing & Monitoring
 azure-ai-inference[tracing]>=1.0.0b6
@@ -17,5 +21,6 @@ dataclasses-json>=0.6.0
 
 # Development dependencies
 python-dotenv>=1.0.0
+ipykernel
 
 pytest-asyncio>=1.3.0

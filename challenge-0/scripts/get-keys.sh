@@ -367,7 +367,10 @@ elif [ -n "$aiFoundryProjectEndpoint" ] && [[ "$aiFoundryProjectEndpoint" == *"a
     fi
 fi
 echo "AI_FOUNDRY_PROJECT_ENDPOINT=\"$aiFoundryProjectEndpoint\"" >> ../.env
+echo "AZURE_AI_PROJECT_ENDPOINT=\"$aiFoundryProjectEndpoint\"" >> ../.env
 echo "AZURE_AI_CONNECTION_ID=\"$azureAIConnectionId\"" >> ../.env
+echo "AZURE_AI_MODEL_DEPLOYMENT_NAME=\"gpt-4.1\"" >> ../.env
+echo "EMBEDDING_MODEL_DEPLOYMENT_NAME=\"text-embedding-ada-002\"" >> ../.env
 # Azure Cosmos DB
 echo "COSMOS_NAME=\"$cosmosDbAccountName\"" >> ../.env
 echo "COSMOS_ENDPOINT=\"$cosmosDbEndpoint\"" >> ../.env

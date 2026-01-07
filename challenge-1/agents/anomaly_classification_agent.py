@@ -6,6 +6,8 @@ from azure.cosmos import CosmosClient
 from azure.identity.aio import AzureCliCredential
 from dotenv import load_dotenv
 
+# TODO: add HostedMCPTool import
+
 load_dotenv(override=True)
 
 # Configuration
@@ -21,6 +23,7 @@ machines_container = database.get_container_client("Machines")
 
 # MCP configuration
 # TODO: add subscription key and MCP endpoint
+
 
 def get_thresholds(machine_type: str) -> list:
     """Get all thresholds for a machine type from Cosmos DB"""
@@ -52,7 +55,7 @@ async def main():
     try:
         async with AzureCliCredential() as credential:
             async with (
-                AzureAIAgentClient(async_credential=credential).create_agent(
+                AzureAIAgentClient(credential=credential).create_agent(
                     name="AnomalyClassificationAgent",
                     instructions="""You are a Anomaly Classification Agent evaluating machine anomalies for warning and critical threshold violations.
                             You will receive anomaly data for a given machine. Your task is to:
