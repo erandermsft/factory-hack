@@ -38,14 +38,14 @@ from azure.mgmt.apimanagement.models import (
 sub_id = os.environ.get("AZURE_SUBSCRIPTION_ID")
 rg = os.environ.get("RESOURCE_GROUP")
 service = os.environ.get("APIM_NAME")
-api_id = os.environ.get("APIM_API_ID", "machines-api")
+api_id = "machine-api"
 
 missing = [k for k,v in {"AZURE_SUBSCRIPTION_ID":sub_id, "RESOURCE_GROUP":rg, "APIM_NAME":service}.items() if not v]
 if missing:
     raise RuntimeError(f"Missing environment variables: {', '.join(missing)}")
 
 # Load machines JSON from repo
-data_path = Path("challenge-0/data/machines.json").resolve()
+data_path = Path("data/machines.json").resolve()
 machines = json.loads(data_path.read_text(encoding="utf-8"))
 if not isinstance(machines, list):
     raise RuntimeError("machines.json must be a JSON array")
@@ -122,11 +122,11 @@ client = ApiManagementClient(cred, sub_id)
 client.api.begin_create_or_update(
     rg, service, api_id,
     ApiCreateOrUpdateParameter(
-        display_name="Machines API (Mock)",
-        description="Mocked Machines data via APIM policies",
-        path="machines",
+        display_name="Machine API",
+        description="Mocked Machine data via APIM policies",
+        path="machine",
         protocols=[Protocol.https],
-        subscription_required=False
+        subscription_required=True
     )
 ).result()
 
@@ -169,7 +169,7 @@ client.api_operation_policy.create_or_update(
   parameters=PolicyContract(value=policy_by_id, format="rawxml")
 )
 
-print("✅ APIM mock API deployed: path=/machines with operations / and /{id}")
+print("✅ APIM mock API deployed: path=/machine with operations / and /{id}")
 EOF
 
 echo "🐍 Running APIM mock script..."

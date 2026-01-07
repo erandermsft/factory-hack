@@ -369,6 +369,7 @@ fi
 echo "AI_FOUNDRY_PROJECT_ENDPOINT=\"$aiFoundryProjectEndpoint\"" >> ../.env
 echo "AZURE_AI_CONNECTION_ID=\"$azureAIConnectionId\"" >> ../.env
 # Azure Cosmos DB
+echo "COSMOS_NAME=\"$cosmosDbAccountName\"" >> ../.env
 echo "COSMOS_ENDPOINT=\"$cosmosDbEndpoint\"" >> ../.env
 echo "COSMOS_KEY=\"$cosmosDbKey\"" >> ../.env
 echo "COSMOS_CONNECTION_STRING=\"$cosmosDbConnectionString\"" >> ../.env

@@ -1,12 +1,15 @@
-# Challenge 0: Environment Setup 
+# Challenge 0: Environment Setup
 
 ## Objective
+
 Set up the Azure infrastructure and seed initial data for the tire factory predictive maintenance multi-agent system.
 
 ## Duration
+
 45-60 minutes
 
 ## Technologies Used
+
 - Azure Resource Manager (ARM Templates)
 - Azure Cosmos DB
 - Microsoft Foundry
@@ -15,9 +18,11 @@ Set up the Azure infrastructure and seed initial data for the tire factory predi
 - GitHub Codespaces
 
 ## Overview
+
 This challenge sets up a complete Azure environment for a **tire manufacturing factory** that produces automotive tires. The system monitors tire production equipment throughout the manufacturing process.
 
-### Tire Manufacturing Equipment Monitored:
+### Tire Manufacturing Equipment Monitored
+
 - **Tire Curing Presses** - Vulcanize green tires into finished products
 - **Tire Building Machines** - Assemble tire components on a building drum
 - **Tire Extruders** - Process rubber compounds into tire components
@@ -48,8 +53,14 @@ az login --use-device-code
 ### Step 3: Deploy Resources
 
 ```bash
-# Set variables
-export RESOURCE_GROUP="rg-tire-factory-hack"
+# Ensure you are located in challenge-0 directory 
+cd challenge-0
+
+# Make resource group name easy to identify. Use your initials or other identifier (e.g., "jd" for John Doe)
+export RG_SUFFIX="<initials>"
+
+# Set variables with your initials as suffix
+export RESOURCE_GROUP="rg-tire-factory-hack-${RG_SUFFIX}"
 export LOCATION="swedencentral"
 
 # Create resource group
@@ -58,30 +69,40 @@ az group create --name $RESOURCE_GROUP --location $LOCATION
 # Deploy infrastructure
 az deployment group create \
   --resource-group $RESOURCE_GROUP \
-  --template-file challenge-00/infra/azuredeploy.json \
+  --template-file infra/azuredeploy.json \
   --parameters location=$LOCATION
 ```
 
-⏱️ Deployment takes approximately 15-20 minutes
+⏱️ Deployment takes approximately 5-10 minutes
 
 ### Step 4: Configure Environment
 
 ```bash
 # Extract connection keys
-bash challenge-00/get-keys.sh --resource-group $RESOURCE_GROUP
+scripts/get-keys.sh --resource-group $RESOURCE_GROUP
 
 # Verify .env file
-cat .env
+cat ../.env
 ```
+
+> [!CAUTION]
+>For convenience we will use key-based authentication and public network access to resources in the hack. In real world implementations you should consider stronger authentication mechanisms and additional network security.
 
 ### Step 5: Seed Factory Data
 
 ```bash
 # Export environment variables
-export $(cat .env | xargs)
+export $(cat ../.env | xargs)
 
 # Run data seeding script
-bash challenge-00/scripts/seed-data.sh
+scripts/seed-data.sh
+```
+
+### Step 5: Create Machine Data Mock API
+
+```bash
+# Run APIM seeding script
+scripts/seed-apim.sh
 ```
 
 ## What Gets Deployed
@@ -89,23 +110,27 @@ bash challenge-00/scripts/seed-data.sh
 ### Azure Resources (15+ services)
 
 **Data & Storage:**
+
 - Azure Cosmos DB (NoSQL database)
 - Azure Storage Account
 - Azure Cognitive Search
 
 **AI & Analytics:**
+
 - Microsoft Foundry Hub & Project
 - GPT-4.1-mini deployment
 - Azure Content Safety
 - Application Insights
 
 **Compute:**
+
 - Azure Container Apps Environment
 - Azure Container App (API)
 - Azure Container Registry
 - Azure API Management
 
 **Monitoring:**
+
 - Log Analytics Workspace
 
 ### Cosmos DB Data Model (7 Containers)
@@ -168,6 +193,7 @@ The seeded data includes **warning conditions** to test your agents:
 ### Knowledge Base (10 Troubleshooting Guides)
 
 Sample articles include:
+
 - Curing temperature excessive
 - Building drum vibration
 - Extruder barrel overheating
@@ -175,6 +201,7 @@ Sample articles include:
 - Mixer vibration issues
 
 Each article contains:
+
 - Symptoms & possible causes
 - Diagnostic steps
 - Solutions & repair procedures
@@ -183,6 +210,7 @@ Each article contains:
 ### Parts Inventory (16 Spare Parts)
 
 Categories include:
+
 - Bladders, seals, and heating elements
 - Bearings and servo motors
 - Sensors and load cells
@@ -221,9 +249,10 @@ az cosmosdb sql container list \
 ### Sample Queries
 
 **Find machines with warnings:**
+
 ```bash
 az cosmosdb sql query \
-  --account-name <cosmos-account> \
+  --account-name $COSMOS_NAME \
   --resource-group $RESOURCE_GROUP \
   --database-name FactoryOpsDB \
   --container-name Telemetry \
@@ -231,6 +260,7 @@ az cosmosdb sql query \
 ```
 
 **Get curing press thresholds:**
+
 ```sql
 SELECT c.metric, c.normalRange, c.warningThreshold, c.criticalThreshold
 FROM c
@@ -238,6 +268,7 @@ WHERE c.machineType = "tire_curing_press"
 ```
 
 **Find available technicians with curing press skills:**
+
 ```sql
 SELECT c.name, c.skills, c.availability
 FROM c
@@ -268,7 +299,7 @@ az deployment group show \
   --name azuredeploy \
   --query properties.error
 
-# Register missing providers
+# Register missing providers (if needed)
 az provider register --namespace Microsoft.AlertsManagement
 az provider register --namespace Microsoft.App
 ```
@@ -280,24 +311,24 @@ az provider register --namespace Microsoft.App
 ```bash
 # Verify Cosmos DB is ready
 az cosmosdb show \
-  --name <cosmos-account> \
+  --name $COSMOS_NAME \
   --resource-group $RESOURCE_GROUP \
   --query provisioningState
 
 # Check if containers exist
 az cosmosdb sql container list \
-  --account-name <cosmos-account> \
+  --account-name $COSMOS_NAME \
   --resource-group $RESOURCE_GROUP \
   --database-name FactoryOpsDB
 
 # Re-run seed script (idempotent)
-bash challenge-00/scripts/seed-data.sh
+bash challenge-0/scripts/seed-data.sh
 ```
 
 **Problem:** Permission denied on seed script
 
 ```bash
-chmod +x challenge-00/scripts/seed-data.sh
+chmod +x challenge-0/scripts/seed-data.sh
 ```
 
 ### Connection Issues
@@ -307,7 +338,7 @@ chmod +x challenge-00/scripts/seed-data.sh
 ```bash
 # Get connection string
 az cosmosdb keys list \
-  --name <cosmos-account> \
+  --name $COSMOS_NAME \
   --resource-group $RESOURCE_GROUP \
   --type connection-strings
 
@@ -334,12 +365,14 @@ This forms the complete foundation for your multi-agent predictive maintenance s
 ### Challenge 1: Anomaly Detection Agent
 
 Build an agent that:
+
 - Monitors telemetry in real-time
 - Compares readings against thresholds
 - Detects warning and critical conditions
 - Triggers diagnostic workflow
 
 **You'll work with:**
+
 - The 5 warning telemetry samples already seeded
 - The threshold definitions for each machine type
 - Microsoft Foundry for intelligent analysis
@@ -364,6 +397,7 @@ az group delete --name $RESOURCE_GROUP --yes --no-wait
 
 > [!IMPORTANT]
 > This hackathon uses simplified authentication for learning purposes. Production systems should implement:
+>
 > - Managed identities instead of keys
 > - Private endpoints for network security
 > - Azure Key Vault for secrets management

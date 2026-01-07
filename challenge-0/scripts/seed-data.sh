@@ -1,14 +1,14 @@
 #!/bin/bash
 set -e
 
-# Load environment variables from .env in parent directory
+# Load environment variables from .env in parent directory (root)
 if [ -f ../.env ]; then
     set -a
     source ../.env
     set +a
-    echo "✅ Loaded environment variables from ../.env"
+    echo "✅ Loaded environment variables from .env"
 else
-    echo "❌ .env file not found. Please run get-keys.sh first."
+    echo "❌ .env file not found in parent directory. Please run get-keys.sh first."
     exit 1
 fi
 
@@ -90,7 +90,7 @@ def seed_cosmos_data(container_clients):
     """Seed data into Cosmos DB containers"""
     print("📦 Seeding Cosmos DB data...")
     
-    # Data file mappings
+    # Data file mappings (relative to challenge-0 directory)
     data_mappings = {
         'Machines': 'data/machines.json',
         'Thresholds': 'data/thresholds.json',
@@ -198,7 +198,7 @@ def upload_markdown_files(container_name: str, folder_path: str):
     print(f"✅ Completed upload: {uploaded} file(s) to '{container_name}'")
 
 def main():
-    # Resolve container and folder
+    # Resolve container and folder (relative to challenge-0 directory)
     container_name = 'machine-wiki' 
     folder_path = os.path.join('data', 'kb-wiki')
 
