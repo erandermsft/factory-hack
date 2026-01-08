@@ -135,6 +135,7 @@ client.api_operation.create_or_update(
     rg, service, api_id, "get-machines",
     OperationContract(
         display_name="List Machines",
+        description="Retrieve all machines",
         method="GET",
         url_template="/",
         template_parameters=[],
@@ -153,6 +154,7 @@ client.api_operation.create_or_update(
     rg, service, api_id, "get-machine",
     OperationContract(
         display_name="Get Machine",
+        description="Retrieve machine by ID",
         method="GET",
         url_template="/{id}",
         template_parameters=[ParameterContract(name="id", type="string", required=True)],
