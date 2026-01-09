@@ -1,7 +1,6 @@
 # Microsoft Agent Framework (requires --pre flag)
 agent-framework-azure-ai
 agent-framework-azure-ai-search
-
 azure-ai-projects
 
 # Azure dependencies

@@ -1,15 +1,16 @@
 import asyncio
 import os
 
-from agent_framework.azure import AzureAIAgentClient
+from agent_framework.azure import AzureAIClient
 from azure.cosmos import CosmosClient
 from azure.identity.aio import AzureCliCredential
 from dotenv import load_dotenv
 
 # TODO: add HostedMCPTool import
 
-# Configuration
 load_dotenv(override=True)
+
+# Configuration
 project_endpoint = os.environ.get("AZURE_AI_PROJECT_ENDPOINT")
 
 # Initialize Cosmos DB clients globally for function tools
@@ -54,7 +55,7 @@ async def main():
     try:
         async with AzureCliCredential() as credential:
             async with (
-                AzureAIAgentClient(credential=credential).create_agent(
+                AzureAIClient(credential=credential).create_agent(
                     name="AnomalyClassificationAgent",
                     instructions="""You are a Anomaly Classification Agent evaluating machine anomalies for warning and critical threshold violations.
                             You will receive anomaly data for a given machine. Your task is to:
@@ -80,8 +81,9 @@ async def main():
                             - summary: human readable summary of the anomalies 
 
                             """,
-
-                    tools=[get_machine_data, get_thresholds]
+                    tools=[
+                        get_machine_data,
+                        get_thresholds]
 
                 ) as agent,
             ):

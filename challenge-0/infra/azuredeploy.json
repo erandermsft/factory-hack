@@ -51,7 +51,8 @@
     "searchServiceContributorRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7ca78c08-252a-4471-8644-bb5ff32d4ba0')]",
     "searchIndexDataReaderRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '1407120a-92aa-4202-b7e9-c0e197c71c8f')]",
     "aiDeveloperRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '64702f94-c441-49e6-a78b-ef80e0188fee')]",
-    "contributorRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]"
+    "contributorRoleId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+    "cosmosDbDataContributorRoleId": "00000000-0000-0000-0000-000000000002"
   },
   "resources": [
     {
@@ -59,6 +60,9 @@
       "apiVersion": "2023-03-01-preview",
       "name": "[format('{0}-apim-{1}', variables('prefix'), variables('suffix'))]",
       "location": "[parameters('location')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
       "sku": {
         "name": "BasicV2",
         "capacity": 1
@@ -459,6 +463,20 @@
         "[resourceId('Microsoft.CognitiveServices/accounts', variables('aiFoundryName'))]",
         "[resourceId('Microsoft.Search/searchServices', variables('searchServiceName'))]"
       ]
+    },
+    {
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments",
+      "apiVersion": "2025-05-01-preview",
+      "name": "[concat(variables('cosmosDbAccountName'), '/', guid(resourceId('Microsoft.ApiManagement/service', format('{0}-apim-{1}', variables('prefix'), variables('suffix'))), resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbAccountName')), variables('cosmosDbDataContributorRoleId')))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbAccountName'))]",
+        "[resourceId('Microsoft.ApiManagement/service', format('{0}-apim-{1}', variables('prefix'), variables('suffix')))]"
+      ],
+      "properties": {
+        "roleDefinitionId": "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions', variables('cosmosDbAccountName'), variables('cosmosDbDataContributorRoleId'))]",
+        "principalId": "[reference(resourceId('Microsoft.ApiManagement/service', format('{0}-apim-{1}', variables('prefix'), variables('suffix'))), '2023-03-01-preview', 'full').identity.principalId]",
+        "scope": "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosDbAccountName'))]"
+      }
     }
   ],
   "outputs": {
