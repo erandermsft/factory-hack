@@ -72,7 +72,7 @@ curl -fsSL "$APIM_GATEWAY_URL/machine/machine-001" -H "Ocp-Apim-Subscription-Key
 curl -fsSL "$APIM_GATEWAY_URL/maintenance/tire_curing_press" -H "Ocp-Apim-Subscription-Key: $APIM_SUBSCRIPTION_KEY" -H "Accept: application/json"
 ```
 
-### Step 2.2. Expose APIs a MCP servers
+### Step 2.2. Expose APIs as MCP servers
 
 API Management provides an easy way to expose APIs as MCP servers without writing any additional wrapper code.
 
@@ -188,8 +188,8 @@ Currently only one tool `machine_data` is available. Your task is to add the kno
     ```
 
 
-    > [!TIP]
-    > The tools property is a list so make sure you add a trailing comma after the first tool
+> [!TIP]
+> The tools property is a list so make sure you have a trailing comma after the first tool
 
 A few things to observe:
 
