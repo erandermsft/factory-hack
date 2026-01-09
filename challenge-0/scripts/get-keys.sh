@@ -266,8 +266,14 @@ if [ -n "$aiFoundryHubName" ] && [ -n "$searchServiceName" ]; then
         # Pattern: /subscriptions/{subscription}/resourceGroups/{rg}/providers/Microsoft.CognitiveServices/accounts/{aiFoundryHub}/connections/{aiFoundryHub}-aisearch
         azureAIConnectionId="/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.CognitiveServices/accounts/${aiFoundryHubName}/connections/${aiFoundryHubName}-aisearch"
         echo "Constructed connection ID: $azureAIConnectionId"
+        
+        # Construct the AI Project resource ID
+        # Pattern: /subscriptions/{subscription}/resourceGroups/{rg}/providers/Microsoft.CognitiveServices/accounts/{aiFoundryHub}/projects/{aiFoundryProject}
+        azureAIProjectResourceId="/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.CognitiveServices/accounts/${aiFoundryHubName}/projects/${aiFoundryProjectName}"
+        echo "Constructed AI Project resource ID: $azureAIProjectResourceId"
     else
         echo "Warning: Could not get subscription ID"
+            azureAIProjectResourceId=""
         azureAIConnectionId=""
     fi
 else
@@ -368,6 +374,7 @@ elif [ -n "$aiFoundryProjectEndpoint" ] && [[ "$aiFoundryProjectEndpoint" == *"a
 fi
 echo "AI_FOUNDRY_PROJECT_ENDPOINT=\"$aiFoundryProjectEndpoint\"" >> ../.env
 echo "AZURE_AI_PROJECT_ENDPOINT=\"$aiFoundryProjectEndpoint\"" >> ../.env
+echo "AZURE_AI_PROJECT_RESOURCE_ID=\"$azureAIProjectResourceId\"" >> ../.env
 echo "AZURE_AI_CONNECTION_ID=\"$azureAIConnectionId\"" >> ../.env
 echo "AZURE_AI_MODEL_DEPLOYMENT_NAME=\"gpt-4.1\"" >> ../.env
 echo "EMBEDDING_MODEL_DEPLOYMENT_NAME=\"text-embedding-ada-002\"" >> ../.env

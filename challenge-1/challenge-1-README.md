@@ -50,36 +50,29 @@ result = await agent.run('Hello, can you classify the following metric for machi
 result = await agent.run('Hello, can you classify the following anomalies for machine-007: [{"metric": "curing_temperature", "value": 179.2},{"metric": "cycle_time", "value": 14.5}]')
 ```
 
-### Step 1.4. Review the agent configuration in Foundry Portal
 
-1. Navigate to [Microsoft Foundry Portal](https://ai.azure.com).
+## Step 2 : Equip the agent with MCP tools
 
-> [!TIP]
-> Enable the new portal experience using the toggle in the upper right corner.
-
-1. Select the _build_ tab to list available agents
-2. Examine the configuration details for **AnomalyClassificationAgent** you just created.
-
-## Step 2 : Use Machine API as MCP tool
-
-Machine information is typically stored in a central system and exposed through an API. Let's adjust the data access to use an existing Machine API instead of accessing a Cosmos DB database directly. In this step you will expose the Machine API as an Model Context Protocol (MCP) server for convenient access from the Agent.
+Machine and threshold information is typically stored in a central system and exposed through an API. Let's adjust the data access to use an existing Machine and Maintenance APIs instead of accessing a Cosmos DB database directly. In this step you will expose the Machine and Maintenance APIs as Model Context Protocol (MCP) servers for convenient access from the Agent.
 
 > [!NOTE]
 > The Model Context Protocol (MCP) is a standardized way for AI models and systems to communicate context and metadata about their operations. It allows different components of an AI ecosystem to share information seamlessly, enabling better coordination and integration.
 
 ### Step 2.1. Test the Machine API
 
-The Machine API is already available in API Management and contains endpoints for listing all machines and get details for a specific machine. Try the API using the following commands
+The Machine API and Maintance APIs are already available in API Management and contains endpoints for getting details about a specific machine and thresholds for certain machine types. Try the APIs using the following commands
 
 ```bash
 # Get all machines
-curl -fsSL "$APIM_GATEWAY_URL/machine" -H "Ocp-Apim-Subscription-Key: $APIM_SUBSCRIPTION_KEY" -H "Accept: application/json"
 
 # Get a specific machine
 curl -fsSL "$APIM_GATEWAY_URL/machine/machine-001" -H "Ocp-Apim-Subscription-Key: $APIM_SUBSCRIPTION_KEY" -H "Accept: application/json"
+
+# Get thresholds for a machine type 
+curl -fsSL "$APIM_GATEWAY_URL/maintenance/tire_curing_press" -H "Ocp-Apim-Subscription-Key: $APIM_SUBSCRIPTION_KEY" -H "Accept: application/json"
 ```
 
-### Step 2.2. Expose Machine API as an MCP server
+### Step 2.2. Expose APIs a MCP servers
 
 API Management provides an easy way to expose APIs as MCP servers without writing any additional wrapper code.
 
@@ -94,59 +87,58 @@ API Management provides an easy way to expose APIs as MCP servers without writin
     - **Name**: _get-machine-data_
     - **Description**: _Gets details about a specific machine_
 6. Click _Create_
-7. Finally, save the _MCP Server URL_ of the newly created MCP server, you will need it in the next part. Add a new entry with the value in the _.env_ file:
+7. Finally, save the _MCP Server URL_ of the newly created MCP server, you will need it in the next part. Add a new entry with the value in the _.env_ file `MACHINE_MCP_SERVER_ENDPOINT=<MCP_SERVER_URL>`
 
+Peform the same steps to create the _Maintenance_ MCP server using the following settings
+
+- **API**: _Maintenance API_
+- **API Operations**: _Get Threshold_
+- **Display Name**: _Get Maintenance Data_
+- **Name**: _get-maintenance-data_
+- **Description**: _Gets maintenance data such as thresholds for maintenance alerts_
+
+Save the _MCP Server URL_ of the MCP server as `MAINTENANCE_MCP_SERVER_ENDPOINT=<MCP_SERVER_URL>`
+
+Reload the environment variables from file to make the new environment variables available in the shell
 ```bash
-MACHINE_MCP_SERVER_ENDPOINT=<MCP_SERVER_URL>
-
-# Reload the environment variables from file
 export $(cat ../.env | xargs)
 ```
 
-### Step 2.3. Use the Machine MCP Server
+### Step 2.3. Use the MCP Servers from the agent
 
-Now its time to replace the direct database access with our new Machine MCP Server. The MCP server will be added as as tool to the Anomaly Classification Agent.
+Now its time to replace the direct database access with our new Machine and Maintenance MCP Servers. The MCP servers will be added as as tools to the Anomaly Classification Agent.
 
-1. Add the following import at the top of [anomaly_classification_agent.py](./agents/anomaly_classification_agent.py)
+[TBD: Do this as a manual exercise and use the UI to configure everyting?]
 
-    ```python
-    from agent_framework import HostedMCPTool
-    ```
+Examine the Python code in [anomaly_classification_agent_mcp.py](./agents/anomaly_classification_agent_mcp.py)  
+A few things to observe:
 
-2. Locate the `# TODO: add subscription key and MCP endpoint` and add the following variables
+- The agent uses two MCP tools
+  - `machine-data`: Fetches details about machines such as id, model and maintenance history.
+  - `maintenance-data`: Retrieves specific metric threshold values for certain machine types.
+- A project connection is created for the MCP tools 
 
-    ```python
-    mcp_endpoint = os.environ.get("MACHINE_MCP_SERVER_ENDPOINT")
-    mcp_subscription_key = os.environ.get("APIM_SUBSCRIPTION_KEY")
-    ```
-
-3. locate the `tools` assignment
-
-    ```python
-    tools=[
-        get_machine_data,
-        get_thresholds]
-    ```
-
-    and replace it with the following code
-
-    ```python
-
-    tools=[HostedMCPTool(name="Machine Data", url=mcp_endpoint, approval_mode="never_require", 
-                        headers={"Ocp-Apim-Subscription-Key": os.environ.get("APIM_SUBSCRIPTION_KEY")}), 
-                        get_thresholds]
-    ```
 
 ### Step 2.4. Test the agent with MCP tool
 
 Run the code
 
 ```bash
-python agents/anomaly_classification_agent.py
+python agents/anomaly_classification_agent_mcp.py
 
 ```
 
 Verify that the agent responed with a correct answer.
+
+### Step 2.5. Review the agent configuration in Foundry Portal
+
+1. Navigate to [Microsoft Foundry Portal](https://ai.azure.com).
+
+> [!TIP]
+> Enable the new portal experience using the toggle in the upper right corner.
+
+1. Select the _build_ tab to list available agents
+2. Examine the configuration details for **AnomalyClassificationAgent** you just created.
 
 ## Step 3: Understand root cause with Fault Diagnosis Agent and Foundry IQ
 
@@ -186,8 +178,13 @@ Currently only one tool `machine_data` is available. Your task is to add the kno
 
     ```python
     
-    HostedMCPTool(name="Knowledge Base", url=machine_wiki_mcp_endpoint, approval_mode="never_require", allowed_tools=["knowledge_base_retrieve"],
-                  headers={"api-key": search_key})
+    MCPTool(
+        server_label="machine-wiki",
+        server_url=machine_wiki_mcp_endpoint,
+        require_approval="never",
+        project_connection_id="machine-wiki-connection",
+        allowed_tools=["knowledge_base_retrieve"],
+    )
     ```
 
 
