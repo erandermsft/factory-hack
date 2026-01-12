@@ -1,0 +1,11 @@
+POST https://localhost:35395/api/analyze_machine
+Content-Type: application/json
+
+{
+    "machine_id": "machine-001",
+    "telemetry": {
+        "curing_temperature": 182.5,
+        "vibration": 0.02,
+        "pressure": 30
+    }
+}

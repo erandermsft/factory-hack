@@ -1,0 +1,6 @@
+@agui_HostAddress = http://localhost:5092
+
+GET {{agui_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

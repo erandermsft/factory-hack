@@ -1,0 +1,112 @@
+import contextlib
+import datetime
+import logging
+import os
+import random
+import json
+import re
+
+import fastapi
+import fastapi.responses
+import fastapi.staticfiles
+import opentelemetry.instrumentation.fastapi as otel_fastapi
+import telemetry
+from pydantic import BaseModel
+from agents import run_factory_workflow
+from agent_framework.observability import configure_otel_providers
+
+
+@contextlib.asynccontextmanager
+async def lifespan(app):
+    telemetry.configure_opentelemetry()
+    configure_otel_providers()
+    yield
+
+
+app = fastapi.FastAPI(lifespan=lifespan)
+otel_fastapi.FastAPIInstrumentor.instrument_app(app, exclude_spans=["send"])
+
+
+
+logger = logging.getLogger(__name__)
+
+
+if not os.path.exists("static"):
+    @app.get("/", response_class=fastapi.responses.HTMLResponse)
+    async def root():
+        """Root endpoint."""
+        return "API service is running. Navigate to <a href='/api/weatherforecast'>/api/weatherforecast</a> to see sample data or POST to <a href='/docs'>/api/analyze_machine</a>."
+
+@app.get("/api/weatherforecast")
+async def weather_forecast():
+    """Weather forecast endpoint."""
+    # Generate fresh data if not in cache or cache unavailable.
+    summaries = [
+        "Freezing",
+        "Bracing",
+        "Chilly",
+        "Cool",
+        "Mild",
+        "Warm",
+        "Balmy",
+        "Hot",
+        "Sweltering",
+        "Scorching",
+    ]
+
+    forecast = []
+    for index in range(1, 6):  # Range 1 to 5 (inclusive)
+        temp_c = random.randint(-20, 55)
+        forecast_date = datetime.datetime.now() + datetime.timedelta(days=index)
+        forecast_item = {
+            "date": forecast_date.isoformat(),
+            "temperatureC": temp_c,
+            "temperatureF": int(temp_c * 9 / 5) + 32,
+            "summary": random.choice(summaries),
+        }
+        forecast.append(forecast_item)
+
+    return forecast
+
+class AnalyzeRequest(BaseModel):
+    machine_id: str
+    telemetry: list[dict] | dict
+
+@app.post("/api/analyze_machine")
+async def analyze_machine(request: AnalyzeRequest):
+    logger.info(f"Analyzing machine {request.machine_id}")
+    
+    try:
+        outputs = await run_factory_workflow(request.machine_id, request.telemetry)
+        
+        serialized_outputs = []
+        for out in outputs:
+            # Handle AgentRunResponse or similar
+            if hasattr(out, 'text'):
+                serialized_outputs.append(out.text)
+            elif hasattr(out, 'params') and hasattr(out.params, 'text'): # AgentRunResponse vs AgentRunEvent
+                 serialized_outputs.append(str(out))
+            else:
+                serialized_outputs.append(str(out))
+
+        return {"results": serialized_outputs}
+
+    except Exception as e:
+        logger.error(f"Workflow failed: {e}")
+        return fastapi.responses.JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+@app.get("/health", response_class=fastapi.responses.PlainTextResponse)
+async def health_check():
+    """Health check endpoint."""
+    return "Healthy"
+
+
+
+# Serve static files directly from root, if the "static" directory exists
+if os.path.exists("static"):
+    app.mount(
+        "/",
+        fastapi.staticfiles.StaticFiles(directory="static", html=True),
+        name="static"
+    )
