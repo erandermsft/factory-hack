@@ -14,7 +14,8 @@ var dotnetapp = builder.AddCSharpApp("dotnetagent", "./a2a/dotnetagent.csproj")
 var app = builder.AddUvicornApp("app", "./app", "main:app")
     .WithUv()
     .WithEnvironment("REPAIR_PLANNER_AGENT_URL", dotnetapp.GetEndpoint("https"))
-    .WithExternalHttpEndpoints()
+    .WithHttpEndpoint(port: 8000, env: "UVICORN_PORT", name: "api")
+    //.WithExternalHttpEndpoints(port:8000)
     .WithHttpHealthCheck("/health");
 
 var frontend = builder.AddViteApp("frontend", "./frontend")
