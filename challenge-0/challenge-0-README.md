@@ -248,18 +248,18 @@ az cosmosdb sql container list \
 
 ### Sample Queries
 
-**Find machines with warnings:**
+If you want to verify or explore the seeded data, here are some sample queries you can run against the Cosmos DB.
+This can be done via the Azure Portal Data Explorer. As shown below:
 
-```bash
-az cosmosdb sql query \
-  --account-name $COSMOS_NAME \
-  --resource-group $RESOURCE_GROUP \
-  --database-name FactoryOpsDB \
-  --container-name Telemetry \
-  --query "SELECT c.machineId, c.status, c.alerts FROM c WHERE c.status = 'warning'"
+![Azure Portal Data Explorer](../images/dataexplorer-sample-query.png)
+
+**Find machines with warnings in Telemetry container:**
+
+```sql
+SELECT c.machineId, c.status, c.alerts FROM c WHERE c.status = "warning"
 ```
 
-**Get curing press thresholds:**
+**Get curing press thresholds in Thresholds container:**
 
 ```sql
 SELECT c.metric, c.normalRange, c.warningThreshold, c.criticalThreshold
@@ -267,7 +267,7 @@ FROM c
 WHERE c.machineType = "tire_curing_press"
 ```
 
-**Find available technicians with curing press skills:**
+**Find available technicians in the Technicians container with curing press skills:**
 
 ```sql
 SELECT c.name, c.skills, c.availability
