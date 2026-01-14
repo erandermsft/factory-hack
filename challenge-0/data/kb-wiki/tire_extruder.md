@@ -17,6 +17,7 @@ This page summarizes common issues, diagnostic steps, and fixes for tire compoun
 
 ## Extruder Barrel Overheating (Priority: High)
 
+- Fault Type: extruder_barrel_overheating
 - Symptoms: Temperature exceeds 118°C; material degradation; smoke from die; discolored compound
 - Likely Causes: Cooling system failure; screw wear causing excessive friction; material residence time too long; temperature control malfunction; blocked cooling passages
 - Diagnostics:
@@ -36,6 +37,7 @@ This page summarizes common issues, diagnostic steps, and fixes for tire compoun
 
 ## Low Material Throughput (Priority: Medium)
 
+- Fault Type: low_material_throughput
 - Symptoms: Output below 650 kg/h; production bottleneck; inconsistent extrusion rate
 - Likely Causes: Screw wear reducing pumping efficiency; die restriction or blockage; feed throat bridging; motor drive issues; material feed problems
 - Diagnostics:

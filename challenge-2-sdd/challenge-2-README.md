@@ -12,7 +12,7 @@ In this challenge...
 Establish project principles
 
 ```
-Create principles focused on code quality, testing standards, modularity and integration requirements. Include governance for how these principles should guide technical decisions and implementation choices.
+Create principles focused on code quality, modularity and integration requirements. Include governance for how these principles should guide technical decisions and implementation choices.
 ```
 
 Create the spec
@@ -46,20 +46,14 @@ The data models needed for the Repair Planner Agent:
 Use proper C# naming conventions and add XML documentation.
 
 Create a CosmosDbService class that:
-- Queries what skills are needed to repair a particular fault 
-- Queries what parts are needed for a specific repair
-
-Create an HRService class that:
 - Queries technicians by required skills
-- Uses the HR API
-
-Create a PartService class that:
-- Fetches parts inventory by part numbers
-- Uses the Part API
-
-Create an ERPService class
+- Queries what parts are needed for a specific repair
+- Creates work orders in Cosmos DB
 - Creates work orders 
-- Uses the ERP API
+
+Create a FaultMappingService class that:
+- Returns a mapping what skills are needed to repair a particular fault 
+- Returns a mapping what parts are needed to repair a particular fault
 
 Include error handling, logging, and async patterns.
 
@@ -75,8 +69,8 @@ Create the main RepairPlanner class that orchestrates:
 2. Querying available technicians based on skills needed
 3. Determine what parts are needed based on the fault type
 4. Checking parts inventory
-4. Generating the repair plan with AI
-5. Saving the work order to HR API 
+5. Generating the repair plan with AI
+6. Saving the work order to HR API 
 
 Include comprehensive logging and error handling.
 
@@ -95,4 +89,34 @@ Break down into tasks
 Create implementation
 
 ## Step 2: Initialize Specify CLI 
+
+```bash
+cd challenge-2-sdd
+
+# Initialize a new Specify project but don't create a new branch 
+specify init RepairPlanner --no-git 
+
+```
+In the prompts select `GitHub Copilot` as the agent and `sh` as the script type 
+
+
+Copy starter files and open the specs in a new code session
+
+``` bash
+cp /docs/constitution /RepairPlanner/.specify/memory/constitution.md
+cp /docs/spec.md /RepairPlanner/...
+
+cd RepairPlanner
+# open the spec project in a new window to make RepairPlanner folder the root and to isolate from other files in this repo 
+code .
+...
+
+
+
+
+
+
+
+
+
 
