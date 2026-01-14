@@ -9,8 +9,9 @@ The **Repair Planner Agent** is the third component in our multi-agent system. A
 - What repair tasks need to be performed
 - Which technician has the required skills
 - What parts are needed from inventory
-- When the maintenance window should be scheduled
 - Creates a structured Work Order in the ERP system
+
+The result from this agent will be used by a fourth agent, the Maintenance Scheduler Agent, that will determine the most optimal maintenance window.
 
 ## Step 1: Project Setup
 
@@ -435,9 +436,26 @@ namespace RepairPlannerAgent
             // Ask @agentplanning to expand this with more fault types
             return faultType.ToLower() switch
             {
-                "overheating" => new List<string> { "HVAC Systems", "Electrical" },
-                "vibration" => new List<string> { "Mechanical", "Alignment" },
-                "pressure drop" => new List<string> { "Hydraulics", "Pneumatics" },
+                // Representative examples from challenge-0/data/fault-skills-mapping.json
+                "curing_temperature_excessive" => new List<string>
+                {
+                    "tire_curing_press",
+                    "temperature_control",
+                    "instrumentation",
+                    "electrical_systems",
+                    "plc_troubleshooting",
+                    "mold_maintenance"
+                },
+                "building_drum_vibration" => new List<string>
+                {
+                    "tire_building_machine",
+                    "vibration_analysis",
+                    "bearing_replacement",
+                    "alignment",
+                    "precision_alignment",
+                    "drum_balancing",
+                    "mechanical_systems"
+                },
                 _ => new List<string> { "General Maintenance" }
             };
         }
@@ -448,9 +466,9 @@ namespace RepairPlannerAgent
             // Ask @agentplanning to expand this with more fault types
             return faultType.ToLower() switch
             {
-                "overheating" => new List<string> { "COOL-FAN-001", "TEMP-SENSOR-A2" },
-                "vibration" => new List<string> { "BEARING-SET-12", "MOUNT-PAD-X5" },
-                "pressure drop" => new List<string> { "SEAL-KIT-07", "VALVE-CHECK-9" },
+                // Representative examples from challenge-0/data/fault-parts-mapping.json
+                "curing_temperature_excessive" => new List<string> { "TCP-HTR-4KW", "GEN-TS-K400" },
+                "ply_tension_excessive" => new List<string> { "TBM-LS-500N", "TBM-SRV-5KW" },
                 _ => new List<string>()
             };
         }
@@ -494,13 +512,13 @@ try
     var cosmosService = new CosmosDbService(
         configuration["COSMOS_ENDPOINT"],
         configuration["COSMOS_KEY"],
-        configuration["COSMOS_DATABASE"]
+        configuration["COSMOS_DATABASE_NAME"]
     );
 
     var aiService = new AIFoundryService(
         configuration["AI_FOUNDRY_ENDPOINT"],
         configuration["AI_FOUNDRY_KEY"],
-        configuration["AI_MODEL_DEPLOYMENT"]
+        configuration["AI_MODEL_DEPLOYMENT_NAME"]
     );
 
     var repairPlanner = new RepairPlanner(
@@ -512,9 +530,9 @@ try
     // Example: Process a diagnosed fault
     var sampleFault = new DiagnosedFault
     {
-        MachineId = "MACHINE-CURE-001",
-        FaultType = "Overheating",
-        RootCause = "Cooling fan bearing failure causing reduced airflow",
+        MachineId = "machine-001",
+        FaultType = "curing_temperature_excessive",
+        RootCause = "Temperature control issue causing curing temperature to exceed threshold",
         Severity = "High",
         DetectedAt = DateTime.UtcNow,
         Metadata = new Dictionary<string, object>
