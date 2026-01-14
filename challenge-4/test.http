@@ -1,4 +1,4 @@
-POST https://localhost:8000/api/analyze_machine
+POST http://localhost:5231/api/analyze_machine
 Content-Type: application/json
 
 {
