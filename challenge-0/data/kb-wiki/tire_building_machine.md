@@ -19,6 +19,7 @@ This page summarizes common issues, diagnostic steps, and fixes for tire buildin
 
 ## Building Drum Vibration (Priority: High)
 
+- Fault Type: building_drum_vibration
 - Symptoms: Vibration above 3.0 mm/s; uneven tire build; material placement errors; unusual noise
 - Likely Causes: Bearing wear on drum shaft; drum imbalance; loose mounting bolts; misaligned drive components; worn coupling
 - Diagnostics:
@@ -38,6 +39,7 @@ This page summarizes common issues, diagnostic steps, and fixes for tire buildin
 
 ## Ply Tension Excessive (Priority: Medium)
 
+- Fault Type: ply_tension_excessive
 - Symptoms: Tension exceeds 230 N; material stretching; inconsistent tire dimensions; servo alarms
 - Likely Causes: Tension roller misalignment; servo motor tuning issues; material property variation; dancer arm malfunction; load cell calibration drift
 - Diagnostics:

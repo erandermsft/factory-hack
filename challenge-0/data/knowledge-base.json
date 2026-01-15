@@ -4,7 +4,8 @@
     "category": "troubleshooting",
     "machineType": "tire_curing_press",
     "issue": "Curing Temperature Excessive",
-    "symptoms": ["Temperature exceeds 178°C", "Tire surface scorching", "Extended cycle times", "Bladder damage"],
+    "faultType": "curing_temperature_excessive",
+    "symptoms": [ "Temperature exceeds 178°C", "Tire surface scorching", "Extended cycle times", "Bladder damage" ],
     "possibleCauses": [
       "Heating element malfunction",
       "Temperature sensor drift",
@@ -35,7 +36,8 @@
     "category": "troubleshooting",
     "machineType": "tire_curing_press",
     "issue": "Curing Cycle Time Deviation",
-    "symptoms": ["Cycle time exceeds 14 minutes", "Inconsistent cure", "Under-cured or over-cured tires"],
+    "faultType": "curing_cycle_time_deviation",
+    "symptoms": [ "Cycle time exceeds 14 minutes", "Inconsistent cure", "Under-cured or over-cured tires" ],
     "possibleCauses": [
       "Mold heating inefficiency",
       "Steam supply pressure drop",
@@ -66,7 +68,8 @@
     "category": "troubleshooting",
     "machineType": "tire_building_machine",
     "issue": "Building Drum Vibration",
-    "symptoms": ["Vibration above 3.0 mm/s", "Uneven tire build", "Material placement errors", "Unusual noise"],
+    "faultType": "building_drum_vibration",
+    "symptoms": [ "Vibration above 3.0 mm/s", "Uneven tire build", "Material placement errors", "Unusual noise" ],
     "possibleCauses": [
       "Bearing wear on drum shaft",
       "Drum imbalance",
@@ -97,7 +100,8 @@
     "category": "troubleshooting",
     "machineType": "tire_building_machine",
     "issue": "Ply Tension Excessive",
-    "symptoms": ["Tension exceeds 230N", "Material stretching", "Inconsistent tire dimensions", "Servo alarms"],
+    "faultType": "ply_tension_excessive",
+    "symptoms": [ "Tension exceeds 230N", "Material stretching", "Inconsistent tire dimensions", "Servo alarms" ],
     "possibleCauses": [
       "Tension roller misalignment",
       "Servo motor tuning issues",
@@ -128,7 +132,8 @@
     "category": "troubleshooting",
     "machineType": "tire_extruder",
     "issue": "Extruder Barrel Overheating",
-    "symptoms": ["Temperature exceeds 118°C", "Material degradation", "Smoke from die", "Discolored compound"],
+    "faultType": "extruder_barrel_overheating",
+    "symptoms": [ "Temperature exceeds 118°C", "Material degradation", "Smoke from die", "Discolored compound" ],
     "possibleCauses": [
       "Cooling system failure",
       "Screw wear causing excessive friction",
@@ -159,7 +164,8 @@
     "category": "troubleshooting",
     "machineType": "tire_extruder",
     "issue": "Low Material Throughput",
-    "symptoms": ["Output below 650 kg/h", "Production bottleneck", "Inconsistent extrusion rate"],
+    "faultType": "low_material_throughput",
+    "symptoms": [ "Output below 650 kg/h", "Production bottleneck", "Inconsistent extrusion rate" ],
     "possibleCauses": [
       "Screw wear reducing pumping efficiency",
       "Die restriction or blockage",
@@ -190,7 +196,8 @@
     "category": "troubleshooting",
     "machineType": "tire_uniformity_machine",
     "issue": "High Radial Force Variation",
-    "symptoms": ["RFV exceeds 100N", "Tire vibration concerns", "Customer complaints", "Failed quality tests"],
+    "faultType": "high_radial_force_variation",
+    "symptoms": [ "RFV exceeds 100N", "Tire vibration concerns", "Customer complaints", "Failed quality tests" ],
     "possibleCauses": [
       "Building process inconsistency",
       "Curing press issues",
@@ -221,7 +228,8 @@
     "category": "maintenance",
     "machineType": "tire_uniformity_machine",
     "issue": "Load Cell Drift",
-    "symptoms": ["Inconsistent measurements", "Calibration check failures", "Trending data shift"],
+    "faultType": "load_cell_drift",
+    "symptoms": [ "Inconsistent measurements", "Calibration check failures", "Trending data shift" ],
     "possibleCauses": [
       "Load cell aging",
       "Temperature variations",
@@ -252,7 +260,8 @@
     "category": "troubleshooting",
     "machineType": "banbury_mixer",
     "issue": "Mixing Temperature Excessive",
-    "symptoms": ["Temperature above 160°C", "Compound scorching", "Rotor drive overload", "Poor compound quality"],
+    "faultType": "mixing_temperature_excessive",
+    "symptoms": [ "Temperature above 160°C", "Compound scorching", "Rotor drive overload", "Poor compound quality" ],
     "possibleCauses": [
       "Excessive mixing speed",
       "Prolonged mixing time",
@@ -283,7 +292,8 @@
     "category": "troubleshooting",
     "machineType": "banbury_mixer",
     "issue": "Excessive Mixer Vibration",
-    "symptoms": ["Vibration above 5.5 mm/s", "Unusual noise", "Foundation cracking", "Safety concerns"],
+    "faultType": "excessive_mixer_vibration",
+    "symptoms": [ "Vibration above 5.5 mm/s", "Unusual noise", "Foundation cracking", "Safety concerns" ],
     "possibleCauses": [
       "Rotor imbalance due to uneven compound buildup",
       "Bearing wear",

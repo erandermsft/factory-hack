@@ -17,6 +17,7 @@ This page summarizes common issues, diagnostic steps, and fixes for tire curing 
 
 ## Curing Temperature Excessive (Priority: High)
 
+- Fault Type: curing_temperature_excessive
 - Symptoms: Temperature exceeds 178°C; tire surface scorching; extended cycle times; bladder damage
 - Likely Causes: Heating element malfunction; temperature sensor drift; steam pressure too high; thermostat failure; inadequate cooling water flow
 - Diagnostics:
@@ -36,6 +37,7 @@ This page summarizes common issues, diagnostic steps, and fixes for tire curing 
 
 ## Curing Cycle Time Deviation (Priority: High)
 
+- Fault Type: curing_cycle_time_deviation
 - Symptoms: Cycle time exceeds 14 minutes; inconsistent cure; under- or over-cured tires
 - Likely Causes: Mold heating inefficiency; steam supply pressure drop; bladder leakage; control system programming error; worn mold seals
 - Diagnostics:

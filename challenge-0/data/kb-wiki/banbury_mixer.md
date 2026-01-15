@@ -17,6 +17,7 @@ This page summarizes common issues, diagnostic steps, and fixes for Banbury mixi
 
 ## Mixing Temperature Excessive (Priority: High)
 
+- Fault Type: mixing_temperature_excessive
 - Symptoms: Temperature above 160°C; compound scorching; rotor drive overload; poor compound quality
 - Likely Causes: Excessive mixing speed; prolonged mixing time; inadequate cooling water; rotor tip wear; overloaded batch size
 - Diagnostics:
@@ -36,6 +37,7 @@ This page summarizes common issues, diagnostic steps, and fixes for Banbury mixi
 
 ## Excessive Mixer Vibration (Priority: High)
 
+- Fault Type: excessive_mixer_vibration
 - Symptoms: Vibration above 5.5 mm/s; unusual noise; foundation cracking; safety concerns
 - Likely Causes: Rotor imbalance from uneven compound buildup; bearing wear; misaligned drive components; loose anchor bolts; gear wear
 - Diagnostics:

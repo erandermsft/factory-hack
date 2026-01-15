@@ -157,6 +157,15 @@ else
     aiFoundryKey=""
 fi
 
+# Warning-only: Challenge 2 uses AI endpoint/key, but we still generate .env for the rest of the workshop.
+if [ -z "$aiFoundryHubName" ] || [ -z "$aiFoundryEndpoint" ] || [ -z "$aiFoundryKey" ]; then
+    echo "⚠️  Could not resolve Azure AI Foundry (Cognitive Services) endpoint/key." >&2
+    echo "    Challenge 2 vars AZURE_AI_CHAT_ENDPOINT / AZURE_AI_CHAT_KEY may be empty." >&2
+    echo "    Troubleshooting:" >&2
+    echo "    - Confirm resources exist in resource group: $resourceGroupName" >&2
+    echo "    - Ensure you have access to the AI resource (keys list permissions)" >&2
+fi
+
 # Search service
 if [ -n "$searchServiceName" ]; then
     searchServiceKey=$(az search admin-key show --resource-group $resourceGroupName --service-name $searchServiceName --query primaryKey -o tsv 2>/dev/null || echo "")
@@ -318,6 +327,23 @@ echo "AI_FOUNDRY_HUB_NAME=\"$aiFoundryHubName\"" >> ../.env
 echo "AI_FOUNDRY_PROJECT_NAME=\"$aiFoundryProjectName\"" >> ../.env
 echo "AI_FOUNDRY_ENDPOINT=\"$aiFoundryEndpoint\"" >> ../.env
 echo "AI_FOUNDRY_KEY=\"$aiFoundryKey\"" >> ../.env
+
+# RepairPlannerAgent (Challenge 2) environment variables
+# For chat, use the same key as the AI Foundry/Cognitive Services account.
+echo "AZURE_AI_CHAT_KEY=\"$aiFoundryKey\"" >> ../.env
+
+# Chat endpoint is derived from the Cognitive Services endpoint.
+# Expected final format:
+#   https://<resource>.cognitiveservices.azure.com/openai/deployments/gpt-4o-mini
+if [ -n "$aiFoundryEndpoint" ]; then
+    aiChatBaseEndpoint=${aiFoundryEndpoint%/}
+    echo "AZURE_AI_CHAT_ENDPOINT=\"${aiChatBaseEndpoint}/openai/deployments/gpt-4o-mini\"" >> ../.env
+else
+    echo "AZURE_AI_CHAT_ENDPOINT=\"\"" >> ../.env
+fi
+
+# Constant for the workshop (placed after the endpoint for readability)
+echo "AZURE_AI_CHAT_MODEL_DEPLOYMENT_NAME=\"gpt-4o-mini\"" >> ../.env
 # Construct AI Foundry Hub Endpoint if missing
 if [ -z "$aiFoundryHubEndpoint" ] && [ -n "$aiFoundryHubName" ]; then
     echo "Constructing AI Foundry Hub Endpoint..."
@@ -380,6 +406,7 @@ echo "AZURE_AI_MODEL_DEPLOYMENT_NAME=\"gpt-4.1\"" >> ../.env
 echo "EMBEDDING_MODEL_DEPLOYMENT_NAME=\"text-embedding-ada-002\"" >> ../.env
 # Azure Cosmos DB
 echo "COSMOS_NAME=\"$cosmosDbAccountName\"" >> ../.env
+echo "COSMOS_DATABASE_NAME=\"FactoryOpsDB\"" >> ../.env
 echo "COSMOS_ENDPOINT=\"$cosmosDbEndpoint\"" >> ../.env
 echo "COSMOS_KEY=\"$cosmosDbKey\"" >> ../.env
 echo "COSMOS_CONNECTION_STRING=\"$cosmosDbConnectionString\"" >> ../.env

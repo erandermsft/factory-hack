@@ -16,6 +16,7 @@ This page summarizes common issues, diagnostic steps, and fixes for tire uniform
 
 ## High Radial Force Variation (Priority: High)
 
+- Fault Type: high_radial_force_variation
 - Symptoms: RFV exceeds 100 N; tire vibration concerns; customer complaints; failed quality tests
 - Likely Causes: Building process inconsistency; curing press issues; material non-uniformity; mold damage; green tire storage conditions
 - Diagnostics:
@@ -35,6 +36,7 @@ This page summarizes common issues, diagnostic steps, and fixes for tire uniform
 
 ## Load Cell Drift (Priority: Medium)
 
+- Fault Type: load_cell_drift
 - Symptoms: Inconsistent measurements; calibration check failures; trending data shift
 - Likely Causes: Load cell aging; temperature variations; mechanical binding; electrical noise interference; previous mechanical shock
 - Diagnostics:
