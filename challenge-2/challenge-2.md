@@ -1,11 +1,11 @@
 # Challenge 2: Building the Repair Planner Agent with GitHub Copilot
 
-**Expected Duration:** 30 minutes
-**Prerequisites**: [Challenge 0](../challenge-0/challenge-0.md) successfully completed
-
-Welcome to Challenge 1!
+Welcome to Challenge 2!
 
 In this challenge we will create an intelligent Repair Planner Agent using .NET that generates comprehensive repair plans and work orders when faults are detected in tire manufacturing equipment. You'll leverage the **@agentplanning** GitHub Copilot agent to guide your development and generate production-ready code.
+
+**Expected Duration:** 30 minutes
+**Prerequisites**: [Challenge 0](../challenge-0/challenge-0.md) successfully completed
 
 ## 🎯 Objective
 

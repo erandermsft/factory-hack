@@ -1,11 +1,11 @@
 # Challenge 1: Building Agent Framework Agents for Anomaly Classification and Fault Diagnosis
 
-**Expected duration**: 60 min
-**Prerequisites**: [Challenge 0](../challenge-0/challenge-0.md) successfully completed
-
 Welcome to Challenge 1!
 
 In this challenge, we will build two specialized agents for classifying and understanding machine anomalies. First we'll develop an **Anomaly Classification Agent** to interpret detected anomalies and raise corresponding maintenance alerts. We'll then implement a **Fault Diagnosis Agent** to determine the root cause of the anomaly to enable preparation for maintenance. The agents will use a number of different tools to accomplish their tasks.
+
+**Expected duration**: 60 min
+**Prerequisites**: [Challenge 0](../challenge-0/challenge-0.md) successfully completed
 
 ## 🎯 Objective
 
@@ -41,6 +41,8 @@ Build an agent that:
 
 As a first step we will create an agent to interpret and classify anomalies and raise maintenance alerts if certain thresholds have been violated. The agent will take anomalies for certain machines as input and check against thresholds for that machine type by using json data stored in Cosmos DB.
 
+---
+
 #### Task 1.1. Review initial code for Anomaly Classification Agent
 
 Examine the Python code in [anomaly_classification_agent.py](./agents/anomaly_classification_agent.py)  
@@ -52,6 +54,8 @@ A few things to observe:
 - The agent is instructed to output both structured alert data in a specific format and a human readable summary.
 - The code will both create the agent and run a sample query aginst it.
 
+---
+
 #### Task 1.2. Run the code
 
 ```bash
@@ -62,12 +66,16 @@ python agents/anomaly_classification_agent.py
 
 Verify that the agent responed with a reasonable answer.
 
+---
+
 ### Task 2 : Equip the agent with MCP tools
 
 Machine and threshold information is typically stored in a central system and exposed through an API. Let's adjust the data access to use an existing Machine and Maintenance APIs instead of accessing a Cosmos DB database directly. In this step you will expose the Machine and Maintenance APIs as Model Context Protocol (MCP) servers for convenient access from the Agent.
 
 > [!NOTE]
 > The Model Context Protocol (MCP) is a standardized way for AI models and systems to communicate context and metadata about their operations. It allows different components of an AI ecosystem to share information seamlessly, enabling better coordination and integration.
+
+---
 
 #### Task 2.1. Test the Machine API
 
@@ -82,6 +90,8 @@ curl -fsSL "$APIM_GATEWAY_URL/machine/machine-001" -H "Ocp-Apim-Subscription-Key
 # Get thresholds for a machine type 
 curl -fsSL "$APIM_GATEWAY_URL/maintenance/tire_curing_press" -H "Ocp-Apim-Subscription-Key: $APIM_SUBSCRIPTION_KEY" -H "Accept: application/json"
 ```
+
+---
 
 #### Task 2.2. Expose APIs as MCP servers
 
@@ -116,6 +126,8 @@ Reload the environment variables from file to make the new environment variables
 export $(cat ../.env | xargs)
 ```
 
+---
+
 #### Task 2.3. Use the MCP Servers from the agent
 
 Now its time to replace the direct database access with our new Machine and Maintenance MCP Servers. The MCP servers will be added as as tools to the Anomaly Classification Agent.
@@ -130,6 +142,8 @@ A few things to observe:
   - `maintenance-data`: Retrieves specific metric threshold values for certain machine types.
 - A project connection is created for the MCP tools
 
+---
+
 #### Task 2.4. Test the agent with MCP tool
 
 Run the code
@@ -141,6 +155,8 @@ python agents/anomaly_classification_agent_mcp.py
 
 Verify that the agent responed with a correct answer.
 
+---
+
 #### Task 2.5. Review and test the agent in Foundry Portal
 
 1. Navigate to [Microsoft Foundry Portal](https://ai.azure.com).
@@ -151,9 +167,12 @@ Verify that the agent responed with a correct answer.
 1. Select the _build_ tab to list available agents
 2. Examine the configuration details for **AnomalyClassificationAgent** you just created.
 3. Try out some additional questions in the playground:
-  - Normal condition (no maintenance needed). Use query `Hello, can you classify the following metric for machine-002: [{"metric": "drum_vibration", "value": 2.1}]`
-  - Critical anomaly. Use query `Hello, can you classify the following metric for machine-005: [{"metric": "mixing_temperature", "value": 175}]`
-  - Non existing machine. Use query `Hello, can you classify the following anomalies for machine-007: [{"metric": "curing_temperature", "value": 179.2},{"metric": "cycle_time", "value": 14.5}]`
+
+- Normal condition (no maintenance needed). Use query `Hello, can you classify the following metric for machine-002: [{"metric": "drum_vibration", "value": 2.1}]`
+- Critical anomaly. Use query `Hello, can you classify the following metric for machine-005: [{"metric": "mixing_temperature", "value": 175}]`
+- Non existing machine. Use query `Hello, can you classify the following anomalies for machine-007: [{"metric": "curing_temperature", "value": 179.2},{"metric": "cycle_time", "value": 14.5}]`
+
+---
 
 ### Task 3: Understand root cause with Fault Diagnosis Agent and Foundry IQ
 
@@ -171,6 +190,8 @@ The machine wiki contains knowledge (common issues, repair instructions and repa
 2. Select _Storage browser_ / _Blob containers_ and select the _machine-wiki_ container  
 3. Select a wiki article and selecte the _edit_ tab to preview the content
 
+---
+
 #### Task 3.2. Expose the machine wiki data as a knowledge base
 
 **Foundry IQ** consists of knowledge sources (_what_ to retrieve) and knowledge bases (_how_ to retrieve). Knowledge sources are created as standalone objects and then referenced in a knowledge base.
@@ -179,6 +200,8 @@ The machine wiki contains knowledge (common issues, repair instructions and repa
 > [Foundry Agent Service](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/overview?view=foundry) orchestrates calls to the knowledge base via the MCP tool and synthesizes the final answer. At runtime, the agent calls only the knowledge base, not the data platform (such as **Azure Blob Storage** in our case) that underlies the knowledge source. The knowledge base handles all retrieval operations.
 
 Create a knowledge source and knowledge base using the [create_knowledge_base.ipynb](./create_knowledge_base.ipynb) notebook.
+
+---
 
 #### Task 3.4. Create the Fault Diagnosis Agent
 
