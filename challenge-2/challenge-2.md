@@ -53,14 +53,18 @@ In our Repair Planner Agent scenario we will use the following workflow and key 
 > [!NOTE]
 > We will use these prompts later in the exercise so you don't need to run them now in Copilot Chat
 
-##### 📋 **Start with Architecture Planning**
+<details>
+<summary>📋 Start with Architecture Planning</summary>
 
 ```
 @agentplanning I need to build a Repair Planner Agent in .NET for Challenge 2. 
 Can you explain the architecture and what components I need to implement?
 ```
 
-##### 🏗️ **Generate Data Models**
+</details>
+
+<details>
+<summary>🏗️ Generate Data Models</summary>
 
 ```
 @agentplanning Create all the data models I need for the Repair Planner Agent:
@@ -71,7 +75,10 @@ Can you explain the architecture and what components I need to implement?
 Use proper C# naming conventions and add XML documentation.
 ```
 
-##### 🗄️ **Create Cosmos DB Service**
+</details>
+
+<details>
+<summary>🗄️ Create Cosmos DB Service</summary>
 
 ```
 @agentplanning Create a CosmosDbService class that:
@@ -81,7 +88,10 @@ Use proper C# naming conventions and add XML documentation.
 Include error handling, logging, and async patterns.
 ```
 
-##### 🤖 **Implement AI Integration**
+</details>
+
+<details>
+<summary>🤖 Implement AI Integration</summary>
 
 ```
 @agentplanning Create an AIFoundryService that uses Microsoft Foundry to generate 
@@ -92,7 +102,10 @@ repair plans. The service should:
 - Handle JSON deserialization errors
 ```
 
-##### 🔧 **Build the Main Agent**
+</details>
+
+<details>
+<summary> 🔧 Build the Main Agent</summary>
 
 ```
 @agentplanning Create the main RepairPlanner class that orchestrates:
@@ -104,7 +117,9 @@ repair plans. The service should:
 Include comprehensive logging and error handling.
 ```
 
-#### 📝 **Generate Program.cs**
+</details>
+<details>
+<summary> 📝 Generate Program.cs </summary>
 
 ```
 @agentplanning Create a Program.cs that:
@@ -115,7 +130,9 @@ Include comprehensive logging and error handling.
 - Displays the work order results
 ```
 
-Best Practices When Using @agentplanning
+</details>
+
+### Best Practices When Using @agentplanning
 
 ✅ **DO:**
 
@@ -134,23 +151,10 @@ Best Practices When Using @agentplanning
 
 ## ✅ Tasks
 
-### Success criteria
-
-After completing the tasks, you should have:
-
-- [ ] A .NET project created with all required packages
-- [ ] Used @agentplanning to generate all data models
-- [ ] Used @agentplanning to create Cosmos DB service
-- [ ] Used @agentplanning to implement AI Foundry integration
-- [ ] Work orders are created and stored in Cosmos DB
-- [ ] Agent handles errors gracefully with logging
-- [ ] Successfully generated at least 3 work orders for different fault types
-- [ ] Used @agentplanning for at least 80% of code development
-- [ ] Asked follow-up questions to improve generated code
-- [ ] Added unit tests with @agentplanning assistance
-
 > [!IMPORTANT]
-> The outcome of @agentplanner is heavily dependent on which model is used for GitHub copilot. Bigger models like **GPT-5.2** and **Claud Sonnet 4.5** might be able to solve more complex tasks compared to the smaller models that are included in the GitHub Free version. See [Supported AI models per Copilot plan](https://docs.github.com/en/copilot/reference/ai-models/supported-models#supported-ai-models-per-copilot-plan) for details. 
+> The outcome of @agentplanner is heavily dependent on which model is used for GitHub copilot. Bigger models like **GPT-5.2** and **Claud Sonnet 4.5** might be able to solve more complex tasks compared to the smaller models that are included in the GitHub Free version. See [Supported AI models per Copilot plan](https://docs.github.com/en/copilot/reference/ai-models/supported-models#supported-ai-models-per-copilot-plan) for details.
+
+---
 
 ### Task 1: Project Setup
 
@@ -165,9 +169,13 @@ dotnet new console -n RepairPlannerAgent
 cd RepairPlannerAgent
 ```
 
+---
+
 ### Task 2: Implement Components with @agentplanning
 
 Now that you understand the workflow, let's build each component. For each section below, use the @agentplanning agent to generate the code.
+
+---
 
 #### Task 2.1: Do architecture planning
 
@@ -177,6 +185,8 @@ Open GitHub Copilot Chat (Ctrl+Shift+I or Cmd+Shift+I) and write (or copy paste)
 @agentplanning I need to build a Repair Planner Agent in .NET for Challenge 2. 
 Can you explain the architecture and what components I need to implement?
 ```
+
+---
 
 #### Task 2.1 Create Data Models
 
@@ -188,7 +198,8 @@ Can you explain the architecture and what components I need to implement?
 
 The agent should generate classes similar to these examples:
 
-**DiagnosedFault.cs** (Input from Challenge 1)
+<details>
+<summary>DiagnosedFault.cs (Input from Challenge 1)</summary>
 
 ```csharp
 namespace RepairPlannerAgent.Models
@@ -205,7 +216,9 @@ namespace RepairPlannerAgent.Models
 }
 ```
 
-**Technician.cs**
+</details>
+<details>
+<summary>Technician.cs</summary>
 
 ```csharp
 namespace RepairPlannerAgent.Models
@@ -221,7 +234,9 @@ namespace RepairPlannerAgent.Models
 }
 ```
 
-**Part.cs**
+</details>
+<details>
+<summary>Part.cs</summary>
 
 ```csharp
 namespace RepairPlannerAgent.Models
@@ -236,7 +251,10 @@ namespace RepairPlannerAgent.Models
 }
 ```
 
-**WorkOrder.cs** (Output)
+</details>
+
+<details>
+<summary>WorkOrder.cs (Output)</summary>
 
 ```csharp
 namespace RepairPlannerAgent.Models
@@ -264,6 +282,8 @@ namespace RepairPlannerAgent.Models
 }
 ```
 
+</details>
+
 #### Task 2.2 Implement Cosmos DB Service
 
 **💬 Ask the agent:**
@@ -277,6 +297,9 @@ Use proper error handling and async/await patterns.
 ```
 
 The agent will generate code similar to this structure:
+
+<details>
+<summary>CosmosDbService.cs</summary>
 
 ```csharp
 using Microsoft.Azure.Cosmos;
@@ -321,12 +344,9 @@ namespace RepairPlannerAgent.Services
 }
 ```
 
-**💡 Tip:** Ask @agentplanning to complete each method implementation. For example:
+</details>
 
-```
-@agentplanning Implement GetAvailableTechniciansWithSkillsAsync that queries Cosmos DB 
-for technicians where any of their skills match the requiredSkills and Available is true.
-```
+---
 
 #### Task 2.3 Implement AI Foundry Service
 
@@ -339,6 +359,9 @@ and parts, then parse the response into a WorkOrder object.
 ```
 
 The agent will generate code similar to this:
+
+<details>
+<summary>AIFoundryService.cs</summary>
 
 ```csharp
 using Azure.AI.Inference;
@@ -400,12 +423,9 @@ Requirements:
 }
 ```
 
-**💡 Tip:** Ask the agent to complete the AI integration:
+</details>
 
-```
-@agentplanning Complete the GenerateRepairPlanAsync method. Call the ChatCompletionsClient 
-with system and user messages, parse the JSON response, and return a WorkOrder object.
-```
+---
 
 #### Task 2.4 Create the Main Agent
 
@@ -418,6 +438,9 @@ and save the work order.
 ```
 
 The agent will generate code similar to this:
+
+<details>
+<summary>RepairPlanner.cs</summary>
 
 ```csharp
 using Microsoft.Extensions.Logging;
@@ -536,6 +559,10 @@ namespace RepairPlannerAgent
 }
 ```
 
+</details>
+
+---
+
 #### Task 2.5 Create Program.cs
 
 **💬 Ask the agent:**
@@ -546,6 +573,9 @@ and demonstrates the repair planning workflow.
 ```
 
 The agent should generate code like this:
+
+<details>
+<summary>Program.cs</summary>
 
 ```csharp
 using Microsoft.Extensions.Configuration;
@@ -623,6 +653,10 @@ catch (Exception ex)
 }
 ```
 
+</details>
+
+---
+
 ### Task 3: Testing Your Agent
 
 #### Task 3.1 Build the Project
@@ -630,6 +664,8 @@ catch (Exception ex)
 ```bash
 dotnet build
 ```
+
+---
 
 #### Task 3.2 Run the Agent
 
@@ -640,6 +676,8 @@ export $(cat ../.env | xargs)
 # Run the application
 dotnet run
 ```
+
+---
 
 #### Task 3.3 Expected Output
 
@@ -666,13 +704,20 @@ info: Program[0]
 ✅ Repair plan generated successfully!
 ```
 
-### Task 4: Enhance with @agentplanning
+---
 
-Once your basic agent is working, use @agentplanning to add advanced features:
+### Task 4 (optional): Enhance with @agentplanning
+
+Once your basic agent is working, use @agentplanning to add advanced features
+
+---
 
 #### Task 4.1 Add Advanced Features
 
-**Priority Calculation**
+
+<details>
+
+<summary>Priority Calculation</summary>
 
 ```
 @agentplanning Add a PriorityCalculator class that determines work order priority based on:
@@ -682,8 +727,10 @@ Once your basic agent is working, use @agentplanning to add advanced features:
 - Parts availability (delay if parts need ordering)
 Return a priority score and category.
 ```
+</details>
 
-**Smart Scheduling**
+<details>
+<summary>Smart Scheduling</summary>
 
 ```
 @agentplanning Add a method to find the optimal maintenance window:
@@ -693,8 +740,10 @@ Return a priority score and category.
 - Calculate minimum production impact
 Return the best time slot with reasoning.
 ```
+</details>
 
-**Parts Ordering Integration**
+<details>
+<summary>Smart Scheduling</summary>
 
 ```
 @agentplanning Create a SupplyChainService that:
@@ -704,8 +753,13 @@ Return the best time slot with reasoning.
 - Updates work order status if parts are on order
 ```
 
-#### Task 4.2 Improve Error Handling
+</details>
 
+---
+
+#### Task 4.2 Improve Error Handling
+<details>
+<summary>Comprehensive Error Handling</summary>
 ```
 @agentplanning Review my code and add comprehensive error handling:
 - Retry logic for transient Cosmos DB failures
@@ -713,8 +767,11 @@ Return the best time slot with reasoning.
 - Validation for AI-generated JSON responses
 - Graceful degradation if AI service is unavailable
 ```
+</details>
 
-### Task 5: Testing with @agentplanning
+---
+
+### Task 5 (optional): Testing with @agentplanning
 
 #### Task 5.1 Generate Unit Tests
 
@@ -747,6 +804,21 @@ Test against actual Azure resources:
 - Query real technician data from Cosmos DB
 - Generate repair plans using live AI Foundry
 - Verify work orders are created correctly
+
+### Success criteria
+
+After completing the tasks, you should have:
+
+- [ ] A .NET project created with all required packages
+- [ ] Used @agentplanning to generate all data models
+- [ ] Used @agentplanning to create Cosmos DB service
+- [ ] Used @agentplanning to implement AI Foundry integration
+- [ ] Work orders are created and stored in Cosmos DB
+- [ ] Agent handles errors gracefully with logging
+- [ ] Successfully generated at least 3 work orders for different fault types
+- [ ] Used @agentplanning for at least 80% of code development
+- [ ] Asked follow-up questions to improve generated code
+- [ ] Added unit tests with @agentplanning assistance
 
 ## 🛠️ Troubleshooting and FAQ
 

@@ -1,11 +1,11 @@
 # Challenge 3: Maintenance Scheduler & Parts Ordering Agents
 
-**Expected Duration:** 60 minutes
-**Prerequisites**: [Challenge 0](../challenge-0/challenge-0.md) successfully completed
-
-Wlcome to Challenge 3!
+Welcome to Challenge 3!
 
 In this challenge, you'll work with two specialized AI agents that optimize factory operations through intelligent maintenance scheduling and automated supply chain management. Both agents interact with Cosmos DB to read work orders, analyze data, and save their outputs back to the database.
+
+**Expected Duration:** 60 minutes
+**Prerequisites**: [Challenge 0](../challenge-0/challenge-0.md) successfully completed
 
 ## 🎯 Objective
 
@@ -17,16 +17,22 @@ In this challenge, you'll work with two specialized AI agents that optimize fact
 [TODO: add business context]
 
 ### Agent Overview
+<details>
+<summary>Maintenance Scheduler Agent</summary>
 
-**Maintenance Scheduler Agent** (`agents/maintenance_scheduler_agent.py`)
+`agents/maintenance_scheduler_agent.py`
 
 - Analyzes work orders and historical maintenance data
 - Finds optimal maintenance windows that minimize production disruption
 - Generates predictive maintenance schedules with risk assessment
 - Saves schedules to Cosmos DB `MaintenanceSchedules` container
 - Updates work order status to 'Scheduled'
+</details>
 
-**Parts Ordering Agent** (`agents/parts_ordering_agent.py`)
+<details>
+<summary>Parts Ordering Agent</summary>
+
+`agents/parts_ordering_agent.py`
 
 - Checks inventory levels for required parts
 - Evaluates supplier performance and lead times
@@ -34,11 +40,14 @@ In this challenge, you'll work with two specialized AI agents that optimize fact
 - Saves orders to Cosmos DB `PartsOrders` container
 - Updates work order status to 'PartsOrdered' or 'Ready'
 
+</details>
+
 ### Cosmos DB Integration
 
-Both agents interact with Azure Cosmos DB as their primary data store:
+Both agents interact with Azure Cosmos DB as their primary data store
 
-#### Containers Used
+<details>
+<summary>Containers Used</summary>
 
 | Container | Purpose | Agent Usage |
 |-----------|---------|-------------|
@@ -51,7 +60,10 @@ Both agents interact with Azure Cosmos DB as their primary data store:
 | **Suppliers** | Supplier information | Read by Parts Ordering for sourcing decisions |
 | **PartsOrders** | Generated parts orders | **Written by Parts Ordering Agent** |
 
-#### Data Flow
+</details>
+
+<details>
+<summary>Data Flow</summary>
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -81,6 +93,8 @@ Input (READ):                         Output (WRITE):
                                       │  └─ reasoning
                                       └─ WorkOrders (status update to 'PartsOrdered' or 'Ready')
 ```
+
+</details>
 
 ---
 
@@ -545,14 +559,14 @@ This allows you to:
 
 🎉 Congratulations! You've successfully worked with two AI agents that integrate deeply with Cosmos DB and include production-ready observability. You've learned how to:
 
-✅ **Read from Cosmos DB** - Query work orders, history, inventory, and supplier data  
-✅ **Write to Cosmos DB** - Save generated schedules and parts orders  
-✅ **Update existing records** - Change work order status based on agent actions  
-✅ **Use Microsoft Agent Framework** - Modern agent architecture with `ChatAgent`  
-✅ **Integrate with Azure AI Foundry** - Register agents and use deployed models  
-✅ **Build data-driven agents** - Combine database queries with AI analysis  
-✅ **Handle multiple containers** - Work with complex data relationships  
-✅ **Implement tracing & observability** - Monitor agent performance and AI model usage  
+- **Read from Cosmos DB** - Query work orders, history, inventory, and supplier data  
+- **Write to Cosmos DB** - Save generated schedules and parts orders  
+- **Update existing records** - Change work order status based on agent actions  
+- **Use Microsoft Agent Framework** - Modern agent architecture with `ChatAgent`  
+- **Integrate with Azure AI Foundry** - Register agents and use deployed models  
+- **Build data-driven agents** - Combine database queries with AI analysis  
+- **Handle multiple containers** - Work with complex data relationships  
+- **Implement tracing & observability** - Monitor agent performance and AI model usage  
 
 These agents demonstrate how AI can optimize factory operations by:
 
@@ -563,9 +577,8 @@ These agents demonstrate how AI can optimize factory operations by:
 - **Workflow Automation**: Updating work order status as tasks complete
 - **Comprehensive Monitoring**: Full visibility into agent execution and AI decisions
 
-### Additional Resources
-
 If you want to expand your knowledge on what we-ve covered in this challenge, have a look at the content below:
+
 [TODO: review links]
 
 - [Azure AI Foundry Tracing Documentation](https://learn.microsoft.com/azure/ai-foundry/how-to/develop/trace-agents-sdk)

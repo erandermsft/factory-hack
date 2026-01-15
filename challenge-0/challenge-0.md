@@ -11,6 +11,7 @@ This challenge sets up a complete Azure environment for a **tire manufacturing f
 2. **GitHub Account** to fork the repository
 3. **GitHub Codespaces** access
 4. **Azure CLI** (pre-installed in Codespaces)
+
 ## 🎯 Objective
 
 - Set up the Azure infrastructure and seed initial data for the tire factory predictive maintenance multi-agent system.
@@ -19,8 +20,8 @@ This challenge sets up a complete Azure environment for a **tire manufacturing f
 ## 🧭 Context and background information
 
 [TODO: add more explanation]
-
-### Technologies Used
+<details>
+<summary>Technologies Used</summary>
 
 - Azure Resource Manager (ARM Templates)
 - Azure Cosmos DB
@@ -29,13 +30,18 @@ This challenge sets up a complete Azure environment for a **tire manufacturing f
 - Azure Container Apps
 - GitHub Codespaces
 
-### Tire Manufacturing Equipment Monitored
+</details>
+
+<details>
+<summary>Tire Manufacturing Equipment Monitored</summary>
 
 - **Tire Curing Presses** - Vulcanize green tires into finished products
 - **Tire Building Machines** - Assemble tire components on a building drum
 - **Tire Extruders** - Process rubber compounds into tire components
 - **Tire Uniformity Machines** - Quality control and performance testing
 - **Banbury Mixers** - Mix rubber compounds with additives
+
+</details>
 
 ### What Gets Deployed
 
@@ -197,7 +203,7 @@ az login --use-device-code
 
 ### Task 3: Deploy Resources
 
-> [!IMPORTANT]
+> [!NOTE]
 > Depending on the setup for the hackathon the Azure resources might already have been provisioned for you and you can then skip this step.
 > Check with your hackathon coach what is applicable for you.
 
@@ -224,9 +230,15 @@ az deployment group create \
 
 ⏱️ Deployment takes approximately 5-10 minutes
 
+[TODO: add steps how to add yourself as AI Developer on Foundry portal resource]
+
 ---
 
-### Task 4: Configure Environment
+### Task 4: Configure Environment Variables
+
+> [!IMPORTANT]
+> Wait until all Azure resources are successfully deployed before starting this task.
+> Otherwise the environmment variables cannot be extracted correctly.
 
 ```bash
 # Extract connection keys
@@ -234,10 +246,15 @@ scripts/get-keys.sh --resource-group $RESOURCE_GROUP
 
 # Verify .env file
 cat ../.env
+
+# Export environment variables
+export $(cat ../.env | xargs)
+
 ```
 
 > [!TIP]
 > Keep your `.env` file handy throughout the hackathon. Add it to `.gitignore` to avoid committing secrets!
+> You need to re-export the variables each time you open a new shell or when you resume a stopped Codespace.
 
 > [!CAUTION]
 >For convenience we will use key-based authentication and public network access to resources in the hack. In real world implementations you should consider stronger authentication mechanisms and additional network security.
@@ -247,8 +264,6 @@ cat ../.env
 ### Task 5: Seed Factory Sample Data
 
 ```bash
-# Export environment variables
-export $(cat ../.env | xargs)
 
 # Run data seeding script
 scripts/seed-data.sh
@@ -280,14 +295,17 @@ If you want to verify or explore the seeded data, here are some sample queries y
 This can be done via the Azure Portal Data Explorer. As shown below:
 
 ![Azure Portal Data Explorer](../images/dataexplorer-sample-query.png)
-
-**Find machines with warnings in Telemetry container:**
+<details>
+<summary>Find machines with warnings in Telemetry container</summary>
 
 ```sql
 SELECT c.machineId, c.status, c.alerts FROM c WHERE c.status = "warning"
 ```
 
-**Get curing press thresholds in Thresholds container:**
+</details>
+
+<details>
+<summary>Get curing press thresholds in Thresholds container</summary>
 
 ```sql
 SELECT c.metric, c.normalRange, c.warningThreshold, c.criticalThreshold
@@ -295,7 +313,10 @@ FROM c
 WHERE c.machineType = "tire_curing_press"
 ```
 
-**Find available technicians in the Technicians container with curing press skills:**
+</details>
+
+<details>
+<summary>Find available technicians in the Technicians container with curing press skills</summary>
 
 ```sql
 SELECT c.name, c.skills, c.availability
@@ -304,6 +325,7 @@ WHERE ARRAY_CONTAINS(c.skills, "tire_curing_press")
   AND c.availability = "available"
 ```
 
+</details>
 ---
 
 ### Success Criteria
@@ -320,7 +342,8 @@ WHERE ARRAY_CONTAINS(c.skills, "tire_curing_press")
 
 ### Deployment Issues
 
-**Problem:** ARM template deployment fails
+<details>
+<summary>Problem: ARM template deployment fails</summary>
 
 ```bash
 # Check deployment errors
@@ -333,10 +356,12 @@ az deployment group show \
 az provider register --namespace Microsoft.AlertsManagement
 az provider register --namespace Microsoft.App
 ```
+</details>
 
 ### Data Seeding Issues
 
-**Problem:** Seed script fails
+<details>  
+<summary>Problem: Seed script fails</summary>
 
 ```bash
 # Verify Cosmos DB is ready
@@ -354,16 +379,20 @@ az cosmosdb sql container list \
 # Re-run seed script (idempotent)
 bash challenge-0/scripts/seed-data.sh
 ```
+</details>
 
-**Problem:** Permission denied on seed script
+<details>
+<summary>Problem: Permission denied on seed script</summary>
 
 ```bash
 chmod +x challenge-0/scripts/seed-data.sh
 ```
 
-### Connection Issues
+</details>
 
-**Problem:** Can't connect to Cosmos DB
+### Connection Issues
+<details>
+<summary>Problem: Can't connect to Cosmos DB</summary>
 
 ```bash
 # Get connection string
@@ -375,17 +404,17 @@ az cosmosdb keys list \
 # Test connectivity
 curl -X GET "$COSMOS_ENDPOINT" -H "Authorization: $COSMOS_KEY"
 ```
+</details>
 
 ### Clean Up
-
-⚠️ **Only run this at the end of the hackathon:**
+> [!WARNING]
+> Only run this at the end of the hackathon
 
 ```bash
 az group delete --name $RESOURCE_GROUP --yes --no-wait
 ```
 
 ## 🧠 Conclusion and reflection
-
 
 🎉 Congratulations! Your tire factory environment is ready. You have provisioned a complete Tire Factory demo environment including
 
@@ -396,7 +425,6 @@ az group delete --name $RESOURCE_GROUP --yes --no-wait
 - 16 spare parts inventory items
 - 6 skilled maintenance technicians
 - 5 historical work orders
-
 
 This forms the complete foundation for your multi-agent predictive maintenance hackathon system
 
@@ -411,7 +439,6 @@ Time to build some intelligent agents!
 > - RBAC for fine-grained access control
 
 **Next step:** [Challenge 1](../challenge-1/challenge-1.md) - Building Agent Framework Agents for Anomaly Classification and Fault Diagnosis
-
 
 If you want to expand your knowledge on what we-ve covered in this challenge, have a look at the content below:
 
