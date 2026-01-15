@@ -1,14 +1,22 @@
 #!/bin/bash
 set -e
 
-# Load environment variables from .env in parent directory (root)
-if [ -f ../.env ]; then
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CHALLENGE0_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO_ROOT_DIR="$(cd "$CHALLENGE0_DIR/.." && pwd)"
+
+cd "$CHALLENGE0_DIR"
+
+# Load environment variables from .env in repo root
+ENV_FILE="$REPO_ROOT_DIR/.env"
+if [ -f "$ENV_FILE" ]; then
     set -a
-    source ../.env
+    # shellcheck disable=SC1090
+    source "$ENV_FILE"
     set +a
-    echo "✅ Loaded environment variables from .env"
+    echo "✅ Loaded environment variables from $ENV_FILE"
 else
-    echo "❌ .env file not found in parent directory. Please run get-keys.sh first."
+    echo "❌ .env file not found at $ENV_FILE. Please run scripts/get-keys.sh first."
     exit 1
 fi
 
@@ -160,6 +168,12 @@ cat > seed_blob_wiki.py << 'EOF'
 import os
 import glob
 from azure.storage.blob import BlobServiceClient, ContentSettings
+from azure.core.exceptions import ResourceExistsError, AzureError
+
+
+def short_error(err: Exception) -> str:
+    msg = getattr(err, 'message', None) or str(err)
+    return msg.splitlines()[0] if msg else err.__class__.__name__
 
 def get_blob_service_client_from_env():
     """Create BlobServiceClient using AZURE_STORAGE_CONNECTION_STRING only."""
@@ -174,9 +188,10 @@ def upload_markdown_files(container_name: str, folder_path: str):
     try:
         container_client.create_container()
         print(f"✅ Created container '{container_name}'")
-    except Exception as e:
-        # Likely already exists; continue
-        print(f"ℹ️ Container '{container_name}' ready or exists: {e}")
+    except ResourceExistsError:
+        print(f"ℹ️ Container '{container_name}' already exists")
+    except AzureError as e:
+        print(f"⚠️ Could not create container '{container_name}': {short_error(e)}")
 
     files = glob.glob(os.path.join(folder_path, '*.md'))
     if not files:
@@ -221,3 +236,14 @@ python3 seed_blob_wiki.py
 rm seed_blob_wiki.py
 
 echo "✅ Blob upload complete!"
+
+# =============================================================================
+# Seed API Management (APIM) proxy APIs
+# =============================================================================
+
+if [ -f "$CHALLENGE0_DIR/scripts/seed-apim.sh" ]; then
+    echo "🚀 Seeding API Management (APIM) proxy APIs..."
+    bash "$CHALLENGE0_DIR/scripts/seed-apim.sh"
+else
+    echo "⚠️ APIM seeding skipped: scripts/seed-apim.sh not found."
+fi

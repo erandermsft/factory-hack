@@ -1,5 +1,9 @@
 # Challenge 0: Environment Setup
 
+Welcome to Challenge 0!
+
+This challenge sets up a complete Azure environment for a **tire manufacturing factory** that produces automotive tires.
+
 **Expected duration**: 45-60 min
 **Prerequisites**:
 
@@ -7,17 +11,14 @@
 2. **GitHub Account** to fork the repository
 3. **GitHub Codespaces** access
 4. **Azure CLI** (pre-installed in Codespaces)
-
-Welcome to Challenge 0!
-
-This challenge sets up a complete Azure environment for a **tire manufacturing factory** that produces automotive tires. The system monitors tire production equipment throughout the manufacturing process.
-
 ## 🎯 Objective
 
 - Set up the Azure infrastructure and seed initial data for the tire factory predictive maintenance multi-agent system.
 - Understand the business scenario for the hackathon and what problem we are trying to solve.
 
 ## 🧭 Context and background information
+
+[TODO: add more explanation]
 
 ### Technologies Used
 
@@ -38,33 +39,37 @@ This challenge sets up a complete Azure environment for a **tire manufacturing f
 
 ### What Gets Deployed
 
-#### Azure Resources (15+ services)
+<details>
+  <summary>Azure Resources (15+ services)</summary>
 
-**Data & Storage:**
+  **Data & Storage:**
 
 - Azure Cosmos DB (NoSQL database)
 - Azure Storage Account
 - Azure Cognitive Search
 
-**AI & Analytics:**
+  **AI & Analytics:**
 
 - Microsoft Foundry Hub & Project
 - GPT-4.1-mini deployment
 - Azure Content Safety
 - Application Insights
 
-**Compute:**
+  **Compute:**
 
 - Azure Container Apps Environment
 - Azure Container App (API)
 - Azure Container Registry
 - Azure API Management
 
-**Monitoring:**
+  **Monitoring:**
 
 - Log Analytics Workspace
 
-#### Cosmos DB Data Model (7 Containers)
+</details>
+
+<details>
+<summary>Cosmos DB Data Model (7 Containers)</summary>
 
 | Container | Partition Key | Purpose | Sample Count |
 |-----------|--------------|---------|--------------|
@@ -76,9 +81,10 @@ This challenge sets up a complete Azure environment for a **tire manufacturing f
 | **Technicians** | `/department` | Maintenance staff | 6 technicians |
 | **WorkOrders** | `/status` | Maintenance history | 5 work orders |
 
-### Sample Factory Data
+</details>
 
-#### Machines (5 Production Units)
+<details>
+<summary>Sample Machines (5 Production Units)</summary>
 
 1. **Tire Curing Press A1** (`machine-001`)
    - Type: `tire_curing_press`
@@ -111,7 +117,10 @@ This challenge sets up a complete Azure environment for a **tire manufacturing f
    - Batches Completed: 15,670
    - Key Metrics: Mixing temperature, Power consumption
 
-#### Telemetry Samples (with Anomalies)
+</details>
+
+<details>
+<summary>Telemetry Samples (with Anomalies)</summary>
 
 The seeded data includes **warning conditions** to test your agents:
 
@@ -121,7 +130,10 @@ The seeded data includes **warning conditions** to test your agents:
 - �� **Machine 004**: Radial force variation 105N (⚠️ exceeds 100N)
 - 🔴 **Machine 005**: Multiple warnings (temp, power, vibration)
 
-#### Knowledge Base (10 Troubleshooting Guides)
+</details>
+
+<details>
+<summary>Knowledge Base (10 Troubleshooting Sample Guides)</summary>
 
 Sample articles include:
 
@@ -138,7 +150,10 @@ Each article contains:
 - Solutions & repair procedures
 - Estimated repair times
 
-#### Parts Inventory (16 Spare Parts)
+</details>
+
+<details>
+<summary>Parts Inventory (16 sample Spare Parts)</summary>
 
 Categories include:
 
@@ -149,8 +164,9 @@ Categories include:
 - Mixer rotor tips
 
 Sample parts with low stock trigger reorder alerts.
-
-#### Technicians (6 Specialists)
+</details>
+<details>
+<summary>Technicians (6 Specialists)</summary>
 
 - **John Smith** - Senior Tire Equipment Technician
 - **Maria Garcia** - Building Machine Specialist
@@ -159,17 +175,9 @@ Sample parts with low stock trigger reorder alerts.
 - **Michael Chen** - Mixing & Extrusion Technician
 - **Jennifer Rodriguez** - Mechanical Technician
 
+</details>
+
 ## ✅ Tasks
-
-Success Criteria
-
-- All Azure resources deployed (15+ services)  
-- `.env` file configured with connection strings  
-- Cosmos DB contains 7 containers  
-- **65+ data items** seeded across all containers  
-- Can query machines and see telemetry warnings  
-- AI Foundry project accessible with GPT-4.1-mini  
-- Cognitive Search service running  
 
 ### Task 1: Fork & Launch Codespace
 
@@ -236,7 +244,7 @@ cat ../.env
 
 ---
 
-### Task 5: Seed Factory Data
+### Task 5: Seed Factory Sample Data
 
 ```bash
 # Export environment variables
@@ -248,14 +256,7 @@ scripts/seed-data.sh
 
 ---
 
-### Task 6: Create Machine Data Mock API
-
-```bash
-# Run APIM seeding script
-scripts/seed-apim.sh
-```
-
-### Task 7: Verify Deployment
+### Task 6: Verify Deployment
 
 ```bash
 # List all resources
@@ -271,7 +272,9 @@ az cosmosdb sql container list \
   --output table
 ```
 
-### Task 8: Run Sample Queries
+---
+
+### Task 7 (optional): Run Sample Queries
 
 If you want to verify or explore the seeded data, here are some sample queries you can run against the Cosmos DB.
 This can be done via the Azure Portal Data Explorer. As shown below:
@@ -300,6 +303,18 @@ FROM c
 WHERE ARRAY_CONTAINS(c.skills, "tire_curing_press") 
   AND c.availability = "available"
 ```
+
+---
+
+### Success Criteria
+
+- [ ] All Azure resources deployed (15+ services)  
+- [ ] `.env` file configured with connection strings  
+- [ ] Cosmos DB contains 7 containers  
+- [ ] **65+ data items** seeded across all containers  
+- [ ] Can query machines and see telemetry warnings  
+- [ ] AI Foundry project accessible with GPT-4.1-mini  
+- [ ] Cognitive Search service running  
 
 ## 🛠️ Troubleshooting and FAQ
 
@@ -371,7 +386,6 @@ az group delete --name $RESOURCE_GROUP --yes --no-wait
 
 ## 🧠 Conclusion and reflection
 
-### What You've Built
 
 🎉 Congratulations! Your tire factory environment is ready. You have provisioned a complete Tire Factory demo environment including
 
@@ -383,6 +397,11 @@ az group delete --name $RESOURCE_GROUP --yes --no-wait
 - 6 skilled maintenance technicians
 - 5 historical work orders
 
+
+This forms the complete foundation for your multi-agent predictive maintenance hackathon system
+
+Time to build some intelligent agents!
+
 > [!IMPORTANT]
 > This hackathon uses simplified authentication for learning purposes. Production systems should implement:
 >
@@ -391,13 +410,10 @@ az group delete --name $RESOURCE_GROUP --yes --no-wait
 > - Azure Key Vault for secrets management
 > - RBAC for fine-grained access control
 
-This forms the complete foundation for your multi-agent predictive maintenance hackathon system
-
-Time to build some intelligent agents!
-
 **Next step:** [Challenge 1](../challenge-1/challenge-1.md) - Building Agent Framework Agents for Anomaly Classification and Fault Diagnosis
 
-## Additional Resources
+
+If you want to expand your knowledge on what we-ve covered in this challenge, have a look at the content below:
 
 - [Azure Cosmos DB Documentation](https://learn.microsoft.com/azure/cosmos-db/)
 - [Microsoft Foundry](https://learn.microsoft.com/azure/ai-foundry/)
