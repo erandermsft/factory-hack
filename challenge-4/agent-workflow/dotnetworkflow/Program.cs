@@ -26,6 +26,15 @@ DotNetEnv.Env.TraversePath().Load();
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHttpClient();
+// Dev/Codespaces: allow the Vite frontend (different origin) to call this API.
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+});
 builder.Configuration.AddEnvironmentVariables();
 
 var configuration = builder.Configuration;
@@ -82,6 +91,7 @@ else
 using var tracerProvider = tracerProviderBuilder.Build();
 
 var app = builder.Build();
+app.UseCors();
 app.MapPost("/api/analyze_machine", AnalyzeMachine);
 app.MapGet("/health", () => Results.Ok(new { Status = "Healthy", Timestamp = DateTimeOffset.UtcNow }));
 app.Run();
