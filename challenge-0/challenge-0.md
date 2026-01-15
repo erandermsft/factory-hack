@@ -1,14 +1,25 @@
 # Challenge 0: Environment Setup
 
-## Objective
+**Expected duration**: 45-60 min
+**Prerequisites**:
 
-Set up the Azure infrastructure and seed initial data for the tire factory predictive maintenance multi-agent system.
+1. **Azure Subscription** with permissions to create resources
+2. **GitHub Account** to fork the repository
+3. **GitHub Codespaces** access
+4. **Azure CLI** (pre-installed in Codespaces)
 
-## Duration
+Welcome to Challenge 0!
 
-45-60 minutes
+This challenge sets up a complete Azure environment for a **tire manufacturing factory** that produces automotive tires. The system monitors tire production equipment throughout the manufacturing process.
 
-## Technologies Used
+## 🎯 Objective
+
+- Set up the Azure infrastructure and seed initial data for the tire factory predictive maintenance multi-agent system.
+- Understand the business scenario for the hackathon and what problem we are trying to solve.
+
+## 🧭 Context and background information
+
+### Technologies Used
 
 - Azure Resource Manager (ARM Templates)
 - Azure Cosmos DB
@@ -16,10 +27,6 @@ Set up the Azure infrastructure and seed initial data for the tire factory predi
 - Azure Cognitive Search
 - Azure Container Apps
 - GitHub Codespaces
-
-## Overview
-
-This challenge sets up a complete Azure environment for a **tire manufacturing factory** that produces automotive tires. The system monitors tire production equipment throughout the manufacturing process.
 
 ### Tire Manufacturing Equipment Monitored
 
@@ -29,85 +36,9 @@ This challenge sets up a complete Azure environment for a **tire manufacturing f
 - **Tire Uniformity Machines** - Quality control and performance testing
 - **Banbury Mixers** - Mix rubber compounds with additives
 
-## Prerequisites
+### What Gets Deployed
 
-1. **Azure Subscription** with permissions to create resources
-2. **GitHub Account** to fork the repository
-3. **GitHub Codespaces** access
-4. **Azure CLI** (pre-installed in Codespaces)
-
-## Quick Start Guide
-
-### Step 1: Fork & Launch Codespace
-
-1. Fork this repository to your GitHub account
-2. Open GitHub Codespaces from your fork
-3. Wait for the environment to initialize
-
-### Step 2: Login to Azure
-
-```bash
-az login --use-device-code
-```
-
-### Step 3: Deploy Resources
-
-```bash
-# Ensure you are located in challenge-0 directory 
-cd challenge-0
-
-# Make resource group name easy to identify. Use your initials or other identifier (e.g., "jd" for John Doe)
-export RG_SUFFIX="<initials>"
-
-# Set variables with your initials as suffix
-export RESOURCE_GROUP="rg-tire-factory-hack-${RG_SUFFIX}"
-export LOCATION="swedencentral"
-
-# Create resource group
-az group create --name $RESOURCE_GROUP --location $LOCATION
-
-# Deploy infrastructure
-az deployment group create \
-  --resource-group $RESOURCE_GROUP \
-  --template-file infra/azuredeploy.json \
-  --parameters location=$LOCATION
-```
-
-⏱️ Deployment takes approximately 5-10 minutes
-
-### Step 4: Configure Environment
-
-```bash
-# Extract connection keys
-scripts/get-keys.sh --resource-group $RESOURCE_GROUP
-
-# Verify .env file
-cat ../.env
-```
-
-> [!CAUTION]
->For convenience we will use key-based authentication and public network access to resources in the hack. In real world implementations you should consider stronger authentication mechanisms and additional network security.
-
-### Step 5: Seed Factory Data
-
-```bash
-# Export environment variables
-export $(cat ../.env | xargs)
-
-# Run data seeding script
-scripts/seed-data.sh
-```
-
-### Step 5: Create Machine Data Mock API
-
-```bash
-# Run APIM seeding script
-scripts/seed-apim.sh
-```
-
-## What Gets Deployed
-
-### Azure Resources (15+ services)
+#### Azure Resources (15+ services)
 
 **Data & Storage:**
 
@@ -133,7 +64,7 @@ scripts/seed-apim.sh
 
 - Log Analytics Workspace
 
-### Cosmos DB Data Model (7 Containers)
+#### Cosmos DB Data Model (7 Containers)
 
 | Container | Partition Key | Purpose | Sample Count |
 |-----------|--------------|---------|--------------|
@@ -145,9 +76,9 @@ scripts/seed-apim.sh
 | **Technicians** | `/department` | Maintenance staff | 6 technicians |
 | **WorkOrders** | `/status` | Maintenance history | 5 work orders |
 
-## Sample Factory Data
+### Sample Factory Data
 
-### Machines (5 Production Units)
+#### Machines (5 Production Units)
 
 1. **Tire Curing Press A1** (`machine-001`)
    - Type: `tire_curing_press`
@@ -180,7 +111,7 @@ scripts/seed-apim.sh
    - Batches Completed: 15,670
    - Key Metrics: Mixing temperature, Power consumption
 
-### Telemetry Samples (with Anomalies)
+#### Telemetry Samples (with Anomalies)
 
 The seeded data includes **warning conditions** to test your agents:
 
@@ -190,7 +121,7 @@ The seeded data includes **warning conditions** to test your agents:
 - �� **Machine 004**: Radial force variation 105N (⚠️ exceeds 100N)
 - 🔴 **Machine 005**: Multiple warnings (temp, power, vibration)
 
-### Knowledge Base (10 Troubleshooting Guides)
+#### Knowledge Base (10 Troubleshooting Guides)
 
 Sample articles include:
 
@@ -207,7 +138,7 @@ Each article contains:
 - Solutions & repair procedures
 - Estimated repair times
 
-### Parts Inventory (16 Spare Parts)
+#### Parts Inventory (16 Spare Parts)
 
 Categories include:
 
@@ -219,7 +150,7 @@ Categories include:
 
 Sample parts with low stock trigger reorder alerts.
 
-### Technicians (6 Specialists)
+#### Technicians (6 Specialists)
 
 - **John Smith** - Senior Tire Equipment Technician
 - **Maria Garcia** - Building Machine Specialist
@@ -228,9 +159,103 @@ Sample parts with low stock trigger reorder alerts.
 - **Michael Chen** - Mixing & Extrusion Technician
 - **Jennifer Rodriguez** - Mechanical Technician
 
-## Verification & Testing
+## ✅ Tasks
 
-### Verify Deployment
+Success Criteria
+
+- All Azure resources deployed (15+ services)  
+- `.env` file configured with connection strings  
+- Cosmos DB contains 7 containers  
+- **65+ data items** seeded across all containers  
+- Can query machines and see telemetry warnings  
+- AI Foundry project accessible with GPT-4.1-mini  
+- Cognitive Search service running  
+
+### Task 1: Fork & Launch Codespace
+
+1. Fork this repository to your GitHub account
+2. Open GitHub Codespaces from your fork
+3. Wait for the environment to initialize
+
+---
+
+### Task 2: Login to Azure
+
+```bash
+az login --use-device-code
+```
+
+---
+
+### Task 3: Deploy Resources
+
+> [!IMPORTANT]
+> Depending on the setup for the hackathon the Azure resources might already have been provisioned for you and you can then skip this step.
+> Check with your hackathon coach what is applicable for you.
+
+```bash
+# Ensure you are located in challenge-0 directory 
+cd challenge-0
+
+# Make resource group name easy to identify. Use your initials or other identifier (e.g., "jd" for John Doe)
+export RG_SUFFIX="<initials>"
+
+# Set variables with your initials as suffix
+export RESOURCE_GROUP="rg-tire-factory-hack-${RG_SUFFIX}"
+export LOCATION="swedencentral"
+
+# Create resource group
+az group create --name $RESOURCE_GROUP --location $LOCATION
+
+# Deploy infrastructure
+az deployment group create \
+  --resource-group $RESOURCE_GROUP \
+  --template-file infra/azuredeploy.json \
+  --parameters location=$LOCATION
+```
+
+⏱️ Deployment takes approximately 5-10 minutes
+
+---
+
+### Task 4: Configure Environment
+
+```bash
+# Extract connection keys
+scripts/get-keys.sh --resource-group $RESOURCE_GROUP
+
+# Verify .env file
+cat ../.env
+```
+
+> [!TIP]
+> Keep your `.env` file handy throughout the hackathon. Add it to `.gitignore` to avoid committing secrets!
+
+> [!CAUTION]
+>For convenience we will use key-based authentication and public network access to resources in the hack. In real world implementations you should consider stronger authentication mechanisms and additional network security.
+
+---
+
+### Task 5: Seed Factory Data
+
+```bash
+# Export environment variables
+export $(cat ../.env | xargs)
+
+# Run data seeding script
+scripts/seed-data.sh
+```
+
+---
+
+### Task 6: Create Machine Data Mock API
+
+```bash
+# Run APIM seeding script
+scripts/seed-apim.sh
+```
+
+### Task 7: Verify Deployment
 
 ```bash
 # List all resources
@@ -246,7 +271,7 @@ az cosmosdb sql container list \
   --output table
 ```
 
-### Sample Queries
+### Task 8: Run Sample Queries
 
 If you want to verify or explore the seeded data, here are some sample queries you can run against the Cosmos DB.
 This can be done via the Azure Portal Data Explorer. As shown below:
@@ -276,17 +301,7 @@ WHERE ARRAY_CONTAINS(c.skills, "tire_curing_press")
   AND c.availability = "available"
 ```
 
-## Success Criteria
-
-✅ All Azure resources deployed (15+ services)  
-✅ `.env` file configured with connection strings  
-✅ Cosmos DB contains 7 containers  
-✅ **65+ data items** seeded across all containers  
-✅ Can query machines and see telemetry warnings  
-✅ AI Foundry project accessible with GPT-4.1-mini  
-✅ Cognitive Search service running  
-
-## Troubleshooting
+## 🛠️ Troubleshooting and FAQ
 
 ### Deployment Issues
 
@@ -346,38 +361,7 @@ az cosmosdb keys list \
 curl -X GET "$COSMOS_ENDPOINT" -H "Authorization: $COSMOS_KEY"
 ```
 
-## What You've Built
-
-🏭 **A Complete Tire Factory Digital Twin** including:
-
-- ✅ 5 production machines with realistic specifications
-- ✅ 13 operating thresholds for anomaly detection
-- ✅ 10 telemetry readings (including 5 with warnings!)
-- ✅ 10 troubleshooting knowledge articles
-- ✅ 16 spare parts inventory items
-- ✅ 6 skilled maintenance technicians
-- ✅ 5 historical work orders
-
-This forms the complete foundation for your multi-agent predictive maintenance system!
-
-## Next Steps
-
-### Challenge 1: Anomaly Detection Agent
-
-Build an agent that:
-
-- Monitors telemetry in real-time
-- Compares readings against thresholds
-- Detects warning and critical conditions
-- Triggers diagnostic workflow
-
-**You'll work with:**
-
-- The 5 warning telemetry samples already seeded
-- The threshold definitions for each machine type
-- Microsoft Foundry for intelligent analysis
-
-## Clean Up
+### Clean Up
 
 ⚠️ **Only run this at the end of the hackathon:**
 
@@ -385,15 +369,19 @@ Build an agent that:
 az group delete --name $RESOURCE_GROUP --yes --no-wait
 ```
 
-## Additional Resources
+## 🧠 Conclusion and reflection
 
-- [Azure Cosmos DB Documentation](https://learn.microsoft.com/azure/cosmos-db/)
-- [Microsoft Foundry](https://learn.microsoft.com/azure/ai-foundry/)
-- [Azure Cognitive Search](https://learn.microsoft.com/azure/search/)
-- [Tire Manufacturing Process](https://en.wikipedia.org/wiki/Tire_manufacturing)
-- [Predictive Maintenance Patterns](https://learn.microsoft.com/azure/architecture/data-guide/scenarios/predictive-maintenance)
+### What You've Built
 
-## Important Notes
+🎉 Congratulations! Your tire factory environment is ready. You have provisioned a complete Tire Factory demo environment including
+
+- 5 production machines with realistic specifications
+- 13 operating thresholds for anomaly detection
+- 10 telemetry readings (including 5 with warnings!)
+- 10 troubleshooting knowledge articles
+- 16 spare parts inventory items
+- 6 skilled maintenance technicians
+- 5 historical work orders
 
 > [!IMPORTANT]
 > This hackathon uses simplified authentication for learning purposes. Production systems should implement:
@@ -403,9 +391,18 @@ az group delete --name $RESOURCE_GROUP --yes --no-wait
 > - Azure Key Vault for secrets management
 > - RBAC for fine-grained access control
 
-> [!TIP]
-> Keep your `.env` file handy throughout the hackathon. Add it to `.gitignore` to avoid committing secrets!
+This forms the complete foundation for your multi-agent predictive maintenance hackathon system
+
+Time to build some intelligent agents!
+
+**Next step:** [Challenge 1](../challenge-1/challenge-1.md) - Building Agent Framework Agents for Anomaly Classification and Fault Diagnosis
+
+## Additional Resources
+
+- [Azure Cosmos DB Documentation](https://learn.microsoft.com/azure/cosmos-db/)
+- [Microsoft Foundry](https://learn.microsoft.com/azure/ai-foundry/)
+- [Azure Cognitive Search](https://learn.microsoft.com/azure/search/)
+- [Tire Manufacturing Process](https://en.wikipedia.org/wiki/Tire_manufacturing)
+- [Predictive Maintenance Patterns](https://learn.microsoft.com/azure/architecture/data-guide/scenarios/predictive-maintenance)
 
 ---
-
-**🎉 Congratulations!** Your tire factory environment is ready. Time to build some intelligent agents!

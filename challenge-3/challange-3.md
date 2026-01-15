@@ -1,14 +1,25 @@
 # Challenge 3: Maintenance Scheduler & Parts Ordering Agents
 
 **Expected Duration:** 60 minutes
+**Prerequisites**: [Challenge 0](../challenge-0/challenge-0.md) successfully completed
 
-## Introduction
+Wlcome to Challenge 3!
 
 In this challenge, you'll work with two specialized AI agents that optimize factory operations through intelligent maintenance scheduling and automated supply chain management. Both agents interact with Cosmos DB to read work orders, analyze data, and save their outputs back to the database.
+
+## 🎯 Objective
+
+- Create Foundry agents using Python
+- Add observability to agents
+
+## 🧭 Context and background information
+
+[TODO: add business context]
 
 ### Agent Overview
 
 **Maintenance Scheduler Agent** (`agents/maintenance_scheduler_agent.py`)
+
 - Analyzes work orders and historical maintenance data
 - Finds optimal maintenance windows that minimize production disruption
 - Generates predictive maintenance schedules with risk assessment
@@ -16,6 +27,7 @@ In this challenge, you'll work with two specialized AI agents that optimize fact
 - Updates work order status to 'Scheduled'
 
 **Parts Ordering Agent** (`agents/parts_ordering_agent.py`)
+
 - Checks inventory levels for required parts
 - Evaluates supplier performance and lead times
 - Generates optimized parts orders with cost analysis
@@ -72,11 +84,34 @@ Input (READ):                         Output (WRITE):
 
 ---
 
-## Part 1: Maintenance Scheduler Agent
+### Agent Architecture
+
+Both agents are **self-contained Python files** that include:
+
+- **Data models** (dataclasses for type safety)
+- **Cosmos DB service layer** (read/write operations)
+- **AI agent logic** using Microsoft Agent Framework
+- **Portal registration** using Azure AI Projects SDK
+- **Main execution workflow** with error handling
+
+#### Key Features
+
+- **Cosmos DB Integration**: Direct read/write operations with multiple containers  
+- **Portal Registration**: Agents automatically register in Azure AI Foundry with auto-incrementing versions  
+- **Azure Monitor Tracing**: Direct integration with Application Insights for comprehensive observability  
+- **Version Tracking**: Automatic version management for deployment history  
+- **Self-Contained**: Each agent is fully independent with no cross-dependencies  
+- **Azure Authentication**: Uses `DefaultAzureCredential` for seamless auth  
+- **Production-Ready**: Async/await, error handling, proper resource cleanup  
+- **AI-Powered Decision Making**: Uses GPT-4 for intelligent analysis and recommendations  
+
+## ✅ Tasks
+
+### Task 1: Maintenance Scheduler Agent
 
 The Maintenance Scheduler Agent analyzes work orders and determines the optimal time to perform maintenance by balancing equipment reliability needs against production impact.
 
-### What It Does
+What It Does
 
 1. **Reads Work Order** from `WorkOrders` container
 2. **Analyzes Historical Data** from `MaintenanceHistory` container to understand failure patterns
@@ -85,14 +120,18 @@ The Maintenance Scheduler Agent analyzes work orders and determines the optimal 
 5. **Saves Schedule** to `MaintenanceSchedules` container with risk scores and recommendations
 6. **Updates Work Order** status to 'Scheduled'
 
-### Running the Agent
+---
+
+#### Task 1.1 Run the Agent
 
 ```bash
 cd /workspaces/factory-ops-hack/challenge-3
 python agents/maintenance_scheduler_agent.py wo-2024-456
 ```
 
-### Expected Output
+---
+
+#### Task 1.2 Review the output
 
 ```
 === Predictive Maintenance Agent ===
@@ -147,9 +186,10 @@ while addressing the critical temperature sensor issue before potential failure.
 ✓ Predictive Maintenance Agent completed successfully!
 ```
 
-### What Gets Saved to Cosmos DB
+What Gets Saved to Cosmos DB:
 
 **MaintenanceSchedules Container:**
+
 ```json
 {
   "id": "sched-1735845678",
@@ -171,6 +211,7 @@ while addressing the critical temperature sensor issue before potential failure.
 ```
 
 **WorkOrders Container (Updated):**
+
 ```json
 {
   "id": "WO-001",
@@ -182,11 +223,11 @@ while addressing the critical temperature sensor issue before potential failure.
 
 ---
 
-## Part 2: Parts Ordering Agent
+### Task 2: Run Parts Ordering Agent
 
 The Parts Ordering Agent checks inventory availability and generates optimized parts orders by evaluating supplier reliability, lead times, and costs.
 
-### What It Does
+What It Does
 
 1. **Reads Work Order** from `WorkOrders` container to get required parts
 2. **Checks Inventory** from `PartsInventory` container to determine what's in stock
@@ -196,14 +237,16 @@ The Parts Ordering Agent checks inventory availability and generates optimized p
 6. **Saves Parts Order** to `PartsOrders` container with order details
 7. **Updates Work Order** status to 'PartsOrdered' (or 'Ready' if all parts available)
 
-### Running the Agent
+#### Task 2.1: Run the Agent
 
 ```bash
 cd /workspaces/factory-ops-hack/challenge-3
 python agents/parts_ordering_agent.py wo-2024-456
 ```
 
-### Expected Output (When Parts Need Ordering)
+#### Task 2.2: Review expected output
+
+When parts need ordering:
 
 ```
 === Parts Ordering Agent ===
@@ -250,7 +293,7 @@ Order Items:
 ✓ Parts Ordering Agent completed successfully!
 ```
 
-### Expected Output (When All Parts Available)
+When All Parts Available:
 
 ```
 === Parts Ordering Agent ===
@@ -273,9 +316,10 @@ No parts order needed.
 ✓ Parts Ordering Agent completed successfully!
 ```
 
-### What Gets Saved to Cosmos DB
+What Gets Saved to Cosmos DB
 
 **PartsOrders Container:**
+
 ```json
 {
   "id": "po-1735845789",
@@ -307,6 +351,7 @@ No parts order needed.
 ```
 
 **WorkOrders Container (Updated):**
+
 ```json
 {
   "id": "WO-002",
@@ -318,40 +363,22 @@ No parts order needed.
 
 ---
 
-## Agent Architecture
-
-Both agents are **self-contained Python files** that include:
-- **Data models** (dataclasses for type safety)
-- **Cosmos DB service layer** (read/write operations)
-- **AI agent logic** using Microsoft Agent Framework
-- **Portal registration** using Azure AI Projects SDK
-- **Main execution workflow** with error handling
-
-### Key Features
-
-✅ **Cosmos DB Integration**: Direct read/write operations with multiple containers  
-✅ **Portal Registration**: Agents automatically register in Azure AI Foundry with auto-incrementing versions  
-✅ **Azure Monitor Tracing**: Direct integration with Application Insights for comprehensive observability  
-✅ **Version Tracking**: Automatic version management for deployment history  
-✅ **Self-Contained**: Each agent is fully independent with no cross-dependencies  
-✅ **Azure Authentication**: Uses `DefaultAzureCredential` for seamless auth  
-✅ **Production-Ready**: Async/await, error handling, proper resource cleanup  
-✅ **AI-Powered Decision Making**: Uses GPT-4 for intelligent analysis and recommendations  
-
 ---
 
-## Azure AI Tracing & Observability
+### Task 3: Azure AI Tracing & Observability
 
 Both agents include integrated **Azure AI Foundry tracing** for comprehensive observability and monitoring. This allows you to see detailed execution traces, performance metrics, and AI model interactions in the Azure AI Foundry portal.
 
-### What's Included
+What's Included
 
 ✅ **Azure Monitor Integration** - Sends traces to Application Insights  
 ✅ **AI Inference Instrumentation** - Automatically traces all AI model calls  
 ✅ **OpenTelemetry Support** - Industry-standard distributed tracing  
 ✅ **Graceful Fallback** - Agents work even if tracing packages aren't installed  
 
-### Installation
+#### Task 3.1: Installation
+
+[TODO: I don't think this is needed anymore]
 
 Tracing dependencies are already included in `requirements.txt`:
 
@@ -360,19 +387,22 @@ pip install -r ../requirements.txt
 ```
 
 This installs:
+
 - `azure-ai-inference[tracing]` - AI tracing instrumentation
 - `azure-monitor-opentelemetry` - Azure Monitor exporter
 - `opentelemetry-api` and `opentelemetry-sdk` - OpenTelemetry framework
 - `opentelemetry-exporter-otlp-proto-grpc` - gRPC exporter for OpenTelemetry
 
-### How It Works
+How It Works
 
 Tracing is **automatically enabled** when you run the agents if:
+
 1. Tracing packages are installed
 2. `APPLICATIONINSIGHTS_CONNECTION_STRING` environment variable is set (already configured in `.env`)
 The agents use **Azure Monitor exporters** to send traces, metrics, and logs directly to Application Insights, which integrates with Azure AI Foundry portal.
 
 When enabled, you'll see:
+
 ```
 📊 Agent Framework tracing enabled (Azure Monitor)
    Traces sent to: InstrumentationKey=...
@@ -380,27 +410,30 @@ When enabled, you'll see:
 📊 AI Inference instrumentation enabled
 ```
 
-### Batch Execution for Multiple Traces
+#### Task 3 Batch Execution for Multiple Traces
 
 Generate multiple traces at once using the batch scripts:
 
 **Bash Script:**
+
 ```bash
 ./run-batch.sh
 ```
 
 **Python Script (recommended):**
+
 ```bash
 python run-batch.py
 ```
 
 Both scripts run 5 work orders through each agent, creating **10 total traces** for analysis.
 
-### Viewing Traces in Azure AI Foundry
+#### Task 3.1: Viewing Traces in Azure AI Foundry
 
+[TODO: update for new Foundry Portal]
 After running the agents:
 
-1. **Navigate to**: https://ai.azure.com
+1. **Navigate to**: <https://ai.azure.com>
 2. **Select your project**: Look for your project (e.g., `msagthack-aiproject-...`)
 3. **Go to**: **Tracing** → View traces (or Build → Tracing)
 4. **Filter traces** by:
@@ -408,9 +441,10 @@ After running the agents:
    - Time range
    - Status (success/failure)
 
-### What You'll See in Traces
+What You'll See in Traces
 
 Each trace includes:
+
 - **Request details**: Work order ID, machine ID, inputs
 - **AI model calls**: Prompts, completions, token usage
 - **Timing data**: Duration of each operation
@@ -419,6 +453,7 @@ Each trace includes:
 - **Metadata**: Agent version, model deployment
 
 **Example Trace Structure:**
+
 ```
 MaintenanceScheduler Trace
 ├─ Get Work Order (Cosmos DB)
@@ -438,11 +473,13 @@ MaintenanceScheduler Trace
 ### Benefits
 
 **For Development:**
+
 - **Debug issues faster**: See exactly where failures occur
 - **Optimize performance**: Identify slow operations
 - **Understand agent behavior**: See full context of AI decisions
 
 **For Production:**
+
 - **Monitor reliability**: Track success/failure rates
 - **Cost tracking**: Monitor token usage across all calls
 - **Performance monitoring**: Latency percentiles, throughput
@@ -465,7 +502,7 @@ The agents will still work normally, just without telemetry.
 ---
 view them in the Agents section:
 
-1. **Navigate to**: https://ai.azure.com
+1. **Navigate to**: <https://ai.azure.com>
 2. **Select your project**: Look for your project (e.g., `msagthack-aiproject-...`)
 3. **Go to**: Build → Agents (or Assistants)
 4. **You should see**:
@@ -473,6 +510,7 @@ view them in the Agents section:
    - `PartsOrderingAgent` - Parts ordering automation
 
 Each agent includes:
+
 - Model configuration (gpt-4o)
 - System instructions
 - Version metadata
@@ -481,12 +519,14 @@ Each agent includes:
 ### Agent Versioning
 
 The agents **automatically register a new version** each time they run:
+
 - Checks for existing versions in the portal
 - Increments to the next version number (v1, v2, v3, etc.)
 - Stores version metadata for tracking
 - Shows version information in console output
 
 This allows you to:
+
 - Track changes to agent behavior over time
 - Compare performance across different versions
 - Maintain a history of agent deployments
@@ -497,9 +537,13 @@ This allows you to:
 
 ---
 
-## Learn More
+## 🛠️ Troubleshooting and FAQ
 
-Congratulations! You've successfully worked with two AI agents that integrate deeply with Cosmos DB and include production-ready observability. You've learned how to:
+- [TODO: add info about delay before traces are shown]
+
+## 🧠 Conclusion and reflection
+
+🎉 Congratulations! You've successfully worked with two AI agents that integrate deeply with Cosmos DB and include production-ready observability. You've learned how to:
 
 ✅ **Read from Cosmos DB** - Query work orders, history, inventory, and supplier data  
 ✅ **Write to Cosmos DB** - Save generated schedules and parts orders  
@@ -511,6 +555,7 @@ Congratulations! You've successfully worked with two AI agents that integrate de
 ✅ **Implement tracing & observability** - Monitor agent performance and AI model usage  
 
 These agents demonstrate how AI can optimize factory operations by:
+
 - **Predictive Scheduling**: Finding optimal maintenance windows using historical data
 - **Risk Assessment**: Calculating failure probability and recommending actions
 - **Inventory Management**: Automatically checking stock and ordering needed parts
@@ -520,7 +565,13 @@ These agents demonstrate how AI can optimize factory operations by:
 
 ### Additional Resources
 
+If you want to expand your knowledge on what we-ve covered in this challenge, have a look at the content below:
+[TODO: review links]
+
 - [Azure AI Foundry Tracing Documentation](https://learn.microsoft.com/azure/ai-foundry/how-to/develop/trace-agents-sdk)
 - [Application Insights Overview](https://learn.microsoft.com/azure/azure-monitor/app/app-insights-overview)
 - [Microsoft Agent Framework Documentation](https://learn.microsoft.com/azure/ai-foundry/how-to/develop/agent-framework)
 - [Cosmos DB Best Practices](https://learn.microsoft.com/azure/cosmos-db/nosql/best-practice-dotnet)
+
+---
+**Next step:** [Challenge 4](../challenge-3/challenge-4.md) - Multi-Agent Orchestration

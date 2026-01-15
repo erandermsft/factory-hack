@@ -23,30 +23,30 @@ By participating in this hackathon, you will learn how to:
 In this hackathon we will leverage the **Microsoft Agent Framework** to create a sophisticated, enterprise-ready predictive maintenance solution. The architecture follows a 4-agent sequential pattern:
 
 - **Anomaly Detection Agent:** Monitors IoT telemetry and detects abnormal equipment behavior using threshold-based logic from Azure Cosmos DB
-- **Fault Diagnosis Agent:** Performs root cause analysis using RAG pattern with Azure Cognitive Search and Microsoft Foundry agents for intelligent diagnostics
+- **Fault Diagnosis Agent:** Performs root cause analysis using RAG pattern with Azure AI Search and Microsoft Foundry agents for intelligent diagnostics
 - **Repair Planner Agent:** Creates work orders and validates resource availability (parts, technicians, schedule) using Microsoft Foundry agents and multi-container Cosmos DB queries
 - **Maintenance Scheduler Agent:** Coordinates logistics, books technicians, and manages execution using Microsoft Foundry agents and optional Calendar API integration
 
 The workflow follows the principle of **"right tool for the right job"** - using Microsoft Foundry agents for conversational AI capabilities and sequential orchestration. This ensures continuous monitoring, rapid response to anomalies, and comprehensive maintenance planning with full observability.
 
 ![Architecture](./images/architecture.png)
-
+[TODO: add marchitecture overview image]
 
 
 ## Challenges
 
-- **Challenge 00**: **[Environment Setup & Data Foundation](challenge-0/challenge-0-README.md)** : Set up your development environment, deploy Azure resources, configure environment variables, and seed sample factory data with 5 machines including pre-seeded warning conditions
-- **Challenge 01**: **[Anomaly Detection and Fault Diagnosis Agents](challenge-1/challenge-1-README.md)**: Build an agent that monitors IoT telemetry from tire manufacturing equipment, compares readings against thresholds, and detects anomalies using threshold-based logic
-- **Challenge 02**: **[Repair Planner Agent and AI-Driven Development](challenge-2/README.md)**: Learn agent-driven development with GitHub Copilot by using the @agentplanning agent to guide you through building a Repair Planner Agent in .NET
-- **Challenge 03**: **[Predictive Maintenance & Parts Ordering Agents with Memory](challenge-3/README.md)**: Build Predictive Maintenance and Parts Ordering agents using Microsoft Foundry's persistent memory layer to maintain context across sessions
-- **Challenge 04**: **[Multi-Agent Orchestration](challenge-4/README.md)**: Create the workflow of these 4 agents using Microsoft Agent Framework and deploy it to an Azure Container App
+- **Challenge 0**: **[Environment Setup & Data Foundation](challenge-0/challenge-0.md)** : Set up your development environment, deploy Azure resources, configure environment variables, and seed sample factory data with 5 machines including pre-seeded warning conditions. You will also spend a few minutes to be more familiar with the business scenario we are using in this hackathon and the problem we are trying to solve.
+- **Challenge 1**: **[Anomaly Detection and Fault Diagnosis Agents](challenge-1/challenge-1.md)**: Build an agent that monitors IoT telemetry from tire manufacturing equipment, compares readings against thresholds, and detects anomalies using threshold-based logic
+- **Challenge 2**: **[Repair Planner Agent and AI-Driven Development](challenge-2/challange-2md)**: Learn agent-driven development with GitHub Copilot by using the @agentplanning agent to guide you through building a Repair Planner Agent in .NET
+- **Challenge 3**: **[Predictive Maintenance & Parts Ordering Agents with Memory](challenge-3/challenge-3.md)**: Build Predictive Maintenance and Parts Ordering agents using Microsoft Foundry's persistent memory layer to maintain context across sessions
+- **Challenge 4**: **[Multi-Agent Orchestration](challenge-4/README.md)**: Create the workflow of these 4 agents using Microsoft Agent Framework and deploy it to an Azure Container App
 
 
 ## Requirements
 
 To successfully complete this hackathon, you will need the following:
 
-- GitHub account to access the repository and run GitHub Codespaces and Github Copilot
+- GitHub account to access the repository and run GitHub Codespaces and use Github Copilot
 - Be familiar with Python or .NET programming, including handling JSON data and making API calls
 - Be familiar with Generative AI Solutions and Azure Services
 - An active Azure subscription, with Owner rights
