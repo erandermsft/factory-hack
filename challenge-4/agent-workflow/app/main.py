@@ -12,7 +12,7 @@ import fastapi.staticfiles
 import opentelemetry.instrumentation.fastapi as otel_fastapi
 import telemetry
 from pydantic import BaseModel
-from agents import run_factory_workflow
+from agents import run_factory_workflow, create_maintenance_scheduler_a2a_app, create_parts_ordering_a2a_app
 from agent_framework.observability import configure_otel_providers
 
 
@@ -25,6 +25,24 @@ async def lifespan(app):
 
 app = fastapi.FastAPI(lifespan=lifespan)
 otel_fastapi.FastAPIInstrumentor.instrument_app(app, exclude_spans=["send"])
+
+# =============================================================================
+# A2A Agent Endpoints
+# Mount the A2A Starlette applications for the challenge-3 agents
+# These can be called from the dotnet workflow using A2A protocol
+# =============================================================================
+try:
+    maintenance_scheduler_a2a = create_maintenance_scheduler_a2a_app()
+    parts_ordering_a2a = create_parts_ordering_a2a_app()
+
+    # Build the Starlette apps from A2A applications and mount them
+    maintenance_scheduler_starlette = maintenance_scheduler_a2a.build()
+    parts_ordering_starlette = parts_ordering_a2a.build()
+
+    app.mount("/maintenance-scheduler", maintenance_scheduler_starlette)
+    app.mount("/parts-ordering", parts_ordering_starlette)
+except Exception as e:
+    logging.getLogger(__name__).warning(f"Failed to initialize A2A agents: {e}")
 
 
 

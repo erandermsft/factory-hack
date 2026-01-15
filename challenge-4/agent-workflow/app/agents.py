@@ -2,14 +2,236 @@ from dotenv import load_dotenv
 from agent_framework import WorkflowBuilder, Executor, handler, WorkflowContext
 
 import os
+import sys
 import logging
 from typing import Any
 from agent_framework import ChatAgent
 from agent_framework.azure import AzureAIAgentClient
 from azure.identity.aio import DefaultAzureCredential
 
+# Add challenge-3 agents to the Python path for in-place imports
+CHALLENGE_3_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "challenge-3", "agents"))
+if CHALLENGE_3_PATH not in sys.path:
+    sys.path.insert(0, CHALLENGE_3_PATH)
+
 load_dotenv(override=True)
 logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# A2A Server Wrappers for Challenge-3 Agents
+# =============================================================================
+
+def create_maintenance_scheduler_a2a_app():
+    """Create an A2A Starlette application for the Maintenance Scheduler Agent."""
+    from a2a.server.apps import A2AStarletteApplication
+    from a2a.server.request_handlers import DefaultRequestHandler
+    from a2a.server.agent_execution import AgentExecutor, RequestContext
+    from a2a.server.events.event_queue import EventQueue
+    from a2a.server.tasks import InMemoryTaskStore
+    from a2a.types import AgentCard, AgentCapabilities, AgentSkill, TextPart, Message
+
+    agent_card = AgentCard(
+        name="MaintenanceSchedulerAgent",
+        description="Predictive maintenance scheduling agent that analyzes work orders, historical maintenance data, and available windows to recommend optimal maintenance schedules.",
+        url="",  # Will be set dynamically
+        version="1.0.0",
+        capabilities=AgentCapabilities(streaming=False, pushNotifications=False),
+        defaultInputModes=["text"],
+        defaultOutputModes=["text"],
+        skills=[
+            AgentSkill(
+                id="schedule_maintenance",
+                name="Schedule Maintenance",
+                description="Predict optimal maintenance schedule for a work order",
+                tags=["maintenance", "scheduling", "predictive"],
+            )
+        ],
+    )
+
+    class MaintenanceSchedulerExecutor(AgentExecutor):
+        """A2A executor that wraps the MaintenanceSchedulerAgent from challenge-3."""
+
+        async def execute(self, context: RequestContext, event_queue: EventQueue) -> None:
+            from maintenance_scheduler_agent import MaintenanceSchedulerAgent
+            from services.cosmos_db_service import CosmosDbService
+
+            try:
+                # Extract the message text
+                request = context.request
+                if request and request.message and request.message.parts:
+                    text_parts = [p for p in request.message.parts if isinstance(p, TextPart)]
+                    input_text = text_parts[0].text if text_parts else ""
+                else:
+                    input_text = ""
+
+                # Initialize services
+                cosmos_endpoint = os.getenv("COSMOS_ENDPOINT")
+                cosmos_key = os.getenv("COSMOS_KEY")
+                database_name = os.getenv("COSMOS_DATABASE_NAME")
+                project_endpoint = os.getenv("AI_FOUNDRY_PROJECT_ENDPOINT") or os.getenv("AZURE_AI_PROJECT_ENDPOINT")
+                deployment_name = os.getenv("MODEL_DEPLOYMENT_NAME", "gpt-4o")
+
+                if not all([cosmos_endpoint, cosmos_key, database_name, project_endpoint]):
+                    response_text = "Error: Missing required environment variables for MaintenanceSchedulerAgent"
+                else:
+                    cosmos_service = CosmosDbService(cosmos_endpoint, cosmos_key, database_name)
+                    agent = MaintenanceSchedulerAgent(project_endpoint, deployment_name, cosmos_service)
+
+                    # Parse work order ID from input
+                    work_order_id = input_text.strip() if input_text else "wo-2024-468"
+
+                    # Get work order and run prediction
+                    work_order = await cosmos_service.get_work_order(work_order_id)
+                    history = await cosmos_service.get_maintenance_history(work_order.machine_id)
+                    windows = await cosmos_service.get_available_maintenance_windows(14)
+
+                    schedule = await agent.predict_schedule(work_order, history, windows)
+
+                    response_text = (
+                        f"Maintenance Schedule Created:\n"
+                        f"- Schedule ID: {schedule.id}\n"
+                        f"- Machine: {schedule.machine_id}\n"
+                        f"- Scheduled Date: {schedule.scheduled_date}\n"
+                        f"- Risk Score: {schedule.risk_score}/100\n"
+                        f"- Failure Probability: {schedule.predicted_failure_probability * 100:.1f}%\n"
+                        f"- Recommended Action: {schedule.recommended_action}\n"
+                        f"- Reasoning: {schedule.reasoning}"
+                    )
+
+                    await cosmos_service.save_maintenance_schedule(schedule)
+
+            except Exception as e:
+                logger.exception("MaintenanceSchedulerAgent error")
+                response_text = f"Error processing maintenance schedule request: {str(e)}"
+
+            # Send response
+            response_message = Message(
+                role="agent",
+                parts=[TextPart(text=response_text)],
+            )
+            await event_queue.enqueue_event(response_message)
+
+        async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
+            pass
+
+    executor = MaintenanceSchedulerExecutor()
+    task_store = InMemoryTaskStore()
+    request_handler = DefaultRequestHandler(agent_executor=executor, task_store=task_store)
+
+    return A2AStarletteApplication(agent_card=agent_card, http_handler=request_handler)
+
+
+def create_parts_ordering_a2a_app():
+    """Create an A2A Starlette application for the Parts Ordering Agent."""
+    from a2a.server.apps import A2AStarletteApplication
+    from a2a.server.request_handlers import DefaultRequestHandler
+    from a2a.server.agent_execution import AgentExecutor, RequestContext
+    from a2a.server.events.event_queue import EventQueue
+    from a2a.server.tasks import InMemoryTaskStore
+    from a2a.types import AgentCard, AgentCapabilities, AgentSkill, TextPart, Message
+
+    agent_card = AgentCard(
+        name="PartsOrderingAgent",
+        description="Parts ordering agent that analyzes inventory status and generates optimized parts orders from suppliers.",
+        url="",  # Will be set dynamically
+        version="1.0.0",
+        capabilities=AgentCapabilities(streaming=False, pushNotifications=False),
+        defaultInputModes=["text"],
+        defaultOutputModes=["text"],
+        skills=[
+            AgentSkill(
+                id="order_parts",
+                name="Order Parts",
+                description="Generate optimized parts order for a work order",
+                tags=["parts", "ordering", "inventory", "suppliers"],
+            )
+        ],
+    )
+
+    class PartsOrderingExecutor(AgentExecutor):
+        """A2A executor that wraps the PartsOrderingAgent from challenge-3."""
+
+        async def execute(self, context: RequestContext, event_queue: EventQueue) -> None:
+            from parts_ordering_agent import PartsOrderingAgent
+            from services.cosmos_db_service import CosmosDbService
+
+            try:
+                # Extract the message text
+                request = context.request
+                if request and request.message and request.message.parts:
+                    text_parts = [p for p in request.message.parts if isinstance(p, TextPart)]
+                    input_text = text_parts[0].text if text_parts else ""
+                else:
+                    input_text = ""
+
+                # Initialize services
+                cosmos_endpoint = os.getenv("COSMOS_ENDPOINT")
+                cosmos_key = os.getenv("COSMOS_KEY")
+                database_name = os.getenv("COSMOS_DATABASE_NAME")
+                project_endpoint = os.getenv("AI_FOUNDRY_PROJECT_ENDPOINT") or os.getenv("AZURE_AI_PROJECT_ENDPOINT")
+                deployment_name = os.getenv("MODEL_DEPLOYMENT_NAME", "gpt-4o")
+
+                if not all([cosmos_endpoint, cosmos_key, database_name, project_endpoint]):
+                    response_text = "Error: Missing required environment variables for PartsOrderingAgent"
+                else:
+                    cosmos_service = CosmosDbService(cosmos_endpoint, cosmos_key, database_name)
+                    agent = PartsOrderingAgent(project_endpoint, deployment_name, cosmos_service)
+
+                    # Parse work order ID from input
+                    work_order_id = input_text.strip() if input_text else "2024-468"
+
+                    # Get work order and generate order
+                    work_order = await cosmos_service.get_work_order(work_order_id)
+                    part_numbers = [p.part_number for p in work_order.required_parts]
+                    inventory = await cosmos_service.get_inventory_items(part_numbers)
+
+                    parts_needing_order = [p for p in work_order.required_parts if not p.is_available]
+
+                    if not parts_needing_order:
+                        response_text = "All required parts are available in stock. No parts order needed."
+                        await cosmos_service.update_work_order_status(work_order.id, "Ready")
+                    else:
+                        needed_part_numbers = [p.part_number for p in parts_needing_order]
+                        suppliers = await cosmos_service.get_suppliers_for_parts(needed_part_numbers)
+
+                        if not suppliers:
+                            response_text = "Error: No suppliers found for required parts."
+                        else:
+                            order = await agent.generate_order(work_order, inventory, suppliers)
+
+                            response_text = (
+                                f"Parts Order Generated:\n"
+                                f"- Order ID: {order.id}\n"
+                                f"- Work Order: {order.work_order_id}\n"
+                                f"- Supplier: {order.supplier_name}\n"
+                                f"- Expected Delivery: {order.expected_delivery_date}\n"
+                                f"- Total Cost: ${order.total_cost:.2f}\n"
+                                f"- Items: {len(order.order_items)} part(s)"
+                            )
+
+                            await cosmos_service.save_parts_order(order)
+                            await cosmos_service.update_work_order_status(work_order.id, "PartsOrdered")
+
+            except Exception as e:
+                logger.exception("PartsOrderingAgent error")
+                response_text = f"Error processing parts order request: {str(e)}"
+
+            # Send response
+            response_message = Message(
+                role="agent",
+                parts=[TextPart(text=response_text)],
+            )
+            await event_queue.enqueue_event(response_message)
+
+        async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
+            pass
+
+    executor = PartsOrderingExecutor()
+    task_store = InMemoryTaskStore()
+    request_handler = DefaultRequestHandler(agent_executor=executor, task_store=task_store)
+
+    return A2AStarletteApplication(agent_card=agent_card, http_handler=request_handler)
 
 
 def _require_env(name: str) -> str:
