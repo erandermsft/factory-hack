@@ -31,7 +31,7 @@ for wo in "${WORK_ORDERS[@]}"; do
     ((current_run++))
     echo "[$current_run/$total_runs] Processing $wo with Maintenance Scheduler..."
     
-    if python maintenance_scheduler.py "$wo" 2>&1 | grep -E "(✓|✗|===)" ; then
+    if python agents/maintenance_scheduler_agent.py "$wo" 2>&1 | grep -E "(✓|✗|===)" ; then
         echo "   ✅ Completed $wo"
     else
         echo "   ⚠️  $wo completed (check output above)"
@@ -52,7 +52,7 @@ for wo in "${WORK_ORDERS[@]}"; do
     ((current_run++))
     echo "[$current_run/$total_runs] Processing $wo with Parts Ordering Agent..."
     
-    if python parts_ordering.py "$wo" 2>&1 | grep -E "(✓|✗|===)" ; then
+    if python agents/parts_ordering_agent.py "$wo" 2>&1 | grep -E "(✓|✗|===)" ; then
         echo "   ✅ Completed $wo"
     else
         echo "   ⚠️  $wo completed (check output above)"

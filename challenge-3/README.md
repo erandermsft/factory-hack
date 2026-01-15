@@ -8,14 +8,14 @@ In this challenge, you'll work with two specialized AI agents that optimize fact
 
 ### Agent Overview
 
-**Maintenance Scheduler Agent** (`maintenance_scheduler.py`)
+**Maintenance Scheduler Agent** (`agents/maintenance_scheduler_agent.py`)
 - Analyzes work orders and historical maintenance data
 - Finds optimal maintenance windows that minimize production disruption
 - Generates predictive maintenance schedules with risk assessment
 - Saves schedules to Cosmos DB `MaintenanceSchedules` container
 - Updates work order status to 'Scheduled'
 
-**Parts Ordering Agent** (`parts_ordering.py`)
+**Parts Ordering Agent** (`agents/parts_ordering_agent.py`)
 - Checks inventory levels for required parts
 - Evaluates supplier performance and lead times
 - Generates optimized parts orders with cost analysis
@@ -89,7 +89,7 @@ The Maintenance Scheduler Agent analyzes work orders and determines the optimal 
 
 ```bash
 cd /workspaces/factory-ops-hack/challenge-3
-python maintenance_scheduler.py wo-2024-456
+python agents/maintenance_scheduler_agent.py wo-2024-456
 ```
 
 ### Expected Output
@@ -200,7 +200,7 @@ The Parts Ordering Agent checks inventory availability and generates optimized p
 
 ```bash
 cd /workspaces/factory-ops-hack/challenge-3
-python parts_ordering.py wo-2024-456
+python agents/parts_ordering_agent.py wo-2024-456
 ```
 
 ### Expected Output (When Parts Need Ordering)
