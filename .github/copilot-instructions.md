@@ -6,7 +6,8 @@ This repo is used for a workshop/exercise.
 Help the developer build the solution from context and instructions, **not** by copying an existing completed implementation.
 
 ## Source of truth
-- For challenge 2 you should follow the agent guidance in `.github/agents/agentplanning.agent.md`.
+- For Challenge 2, follow the agent guidance in `.github/agents/agentplanning.agent.md`.
+- Use the **Foundry Agents SDK** pattern (`Azure.AI.Projects` + `Microsoft.Agents.AI`), not direct ChatCompletions.
 
 ## Do not use solution code as a template
 Unless the user explicitly asks to reveal or compare with a solution, **do not open, reference, or reuse code** from any folder intended to contain completed answers, for example:
@@ -22,3 +23,50 @@ If such folders exist in the workspace, treat them as off-limits.
 - Ask clarifying questions only when required.
 - Implement incrementally in the exercise project.
 - Prefer small, verifiable changes; keep logging helpful.
+
+## Smaller-model friendly (CRITICAL)
+
+This workshop must work reliably with smaller models (e.g., GPT-5-mini). Follow these constraints:
+
+### Output constraints
+- Prefer producing a small number of **complete files** per request (1-3) over partial snippets
+- Keep responses structured: **What you will change**, **Files**, **How to run/verify**
+- Avoid optional extras unless explicitly requested (no extra abstractions, no extra models)
+- When uncertain, state assumptions explicitly and proceed with a safe default
+
+### Pinned versions (Challenge 2)
+Always use these exact NuGet package versions:
+- `Azure.AI.Projects` → `1.2.0-beta.5`
+- `Azure.Identity` → `1.17.1`
+- `Microsoft.Agents.AI` → `1.0.0-preview.260108.1`
+- `Microsoft.Agents.AI.AzureAI` → `1.0.0-preview.260108.1`
+- `Microsoft.Extensions.AI` → `10.2.0`
+- `Microsoft.Extensions.AI.Abstractions` → `10.2.0`
+- `Microsoft.Azure.Cosmos` → `3.56.0`
+- `Microsoft.Extensions.DependencyInjection` → `10.0.2`
+- `Microsoft.Extensions.Logging` → `10.0.2`
+- `Microsoft.Extensions.Logging.Console` → `10.0.2`
+- `Newtonsoft.Json` → `13.0.4`
+
+### Environment variables (Challenge 2)
+- `AZURE_AI_PROJECT_ENDPOINT`
+- `MODEL_DEPLOYMENT_NAME`
+- `COSMOS_ENDPOINT`
+- `COSMOS_KEY`
+- `COSMOS_DATABASE_NAME`
+
+### Fault→skills/parts mappings
+Use the hardcoded mappings from `.github/agents/agentplanning.agent.md` - implement as in-memory dictionaries in `FaultMappingService`.
+
+## Code style for Python developers
+
+Add brief comments explaining C#-specific idioms:
+- `??` and `??=` operators (null coalescing)
+- Primary constructors
+- `await using` (like Python's `async with`)
+
+## What NOT to do
+- ❌ Don't use `Azure.AI.Inference` / `ChatCompletionsClient` - use Foundry Agents SDK
+- ❌ Don't generate partial code snippets - generate complete files
+- ❌ Don't add extra abstractions not in the spec
+- ❌ Don't use different package versions than specified

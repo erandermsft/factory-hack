@@ -1,59 +1,62 @@
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 
-namespace RepairPlannerAgent.Models;
+namespace RepairPlanner.Models;
 
 /// <summary>
-/// Represents a maintenance technician stored in Cosmos DB (container: Technicians).
-/// Matches the sample dataset in challenge-0/data/technicians.json.
+/// Represents a maintenance technician record stored in Cosmos DB.
 /// </summary>
 public sealed class Technician
 {
-    /// <summary>
-    /// Cosmos document id (e.g., "tech-001").
-    /// </summary>
+    [JsonPropertyName("id")]
     [JsonProperty("id")]
     public string Id { get; set; } = string.Empty;
 
+    [JsonPropertyName("employeeId")]
     [JsonProperty("employeeId")]
-    public string? EmployeeId { get; set; }
+    public string EmployeeId { get; set; } = string.Empty;
 
+    [JsonPropertyName("name")]
     [JsonProperty("name")]
     public string Name { get; set; } = string.Empty;
 
+    [JsonPropertyName("role")]
     [JsonProperty("role")]
     public string? Role { get; set; }
 
+    /// <summary>
+    /// Cosmos partition key in sample dataset.
+    /// </summary>
+    [JsonPropertyName("department")]
     [JsonProperty("department")]
-    public string? Department { get; set; }
+    public string Department { get; set; } = string.Empty;
 
+    [JsonPropertyName("email")]
     [JsonProperty("email")]
     public string? Email { get; set; }
 
+    [JsonPropertyName("phone")]
     [JsonProperty("phone")]
     public string? Phone { get; set; }
 
-    /// <summary>
-    /// Skill tags (snake_case) used for matching to fault requirements.
-    /// </summary>
+    [JsonPropertyName("skills")]
     [JsonProperty("skills")]
     public List<string> Skills { get; set; } = new();
 
+    [JsonPropertyName("certifications")]
     [JsonProperty("certifications")]
     public List<string> Certifications { get; set; } = new();
 
+    [JsonPropertyName("available")]
     [JsonProperty("available")]
     public bool Available { get; set; }
 
-    /// <summary>
-    /// Work order numbers currently assigned (if any).
-    /// </summary>
+    [JsonPropertyName("currentAssignments")]
     [JsonProperty("currentAssignments")]
     public List<string> CurrentAssignments { get; set; } = new();
 
-    /// <summary>
-    /// Shift name (e.g., "day", "night").
-    /// </summary>
+    [JsonPropertyName("shiftSchedule")]
     [JsonProperty("shiftSchedule")]
     public string? ShiftSchedule { get; set; }
 }
