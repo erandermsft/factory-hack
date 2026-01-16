@@ -147,7 +147,7 @@ static async Task<IResult> AnalyzeMachine(
         }
 
         var workflow = AgentWorkflowBuilder.BuildSequential(agents.ToArray());
-        var result = new List<Microsoft.Extensions.AI.ChatMessage>();
+        var result = new List<string>();
 
         var run = await InProcessExecution.RunAsync(workflow, telemetryJson);
 
@@ -189,6 +189,7 @@ static async Task<IResult> AnalyzeMachine(
                     {
                       
                         Console.WriteLine(content.ToString());
+                        result.Add(content.ToString());
                     }
                     // Console.WriteLine($"{msg.Role}: {msg.Contents}"); 
                 }
