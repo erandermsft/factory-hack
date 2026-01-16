@@ -73,11 +73,19 @@ def create_maintenance_scheduler_a2a_app():
             try:
                 # Extract the message text from context.message
                 message = context.message
+                logger.info(f"MaintenanceSchedulerExecutor received message: {message}")
+                input_text = ""
                 if message and message.parts:
-                    text_parts = [p for p in message.parts if isinstance(p, TextPart)]
-                    input_text = text_parts[0].text if text_parts else ""
+                    # Parts are wrapped in Part(root=TextPart(...)) structure
+                    for p in message.parts:
+                        logger.info(f"Part: type={type(p)}, root={getattr(p, 'root', None)}")
+                        # Access the inner TextPart via p.root
+                        if hasattr(p, 'root') and hasattr(p.root, 'text'):
+                            input_text = p.root.text
+                            logger.info(f"Extracted text from p.root.text: '{input_text}'")
+                            break
                 else:
-                    input_text = ""
+                    logger.warning("No message parts found in context.message")
 
                 # Initialize services
                 cosmos_endpoint = os.getenv("COSMOS_ENDPOINT")
@@ -94,9 +102,11 @@ def create_maintenance_scheduler_a2a_app():
 
                     # Parse work order ID from input (default matches challenge-3 maintenance_scheduler_agent.py)
                     work_order_id = input_text.strip() if input_text else "wo-2024-468"
+                    logger.info(f"Looking up work order: '{work_order_id}'")
 
                     # Get work order and run prediction
                     work_order = await cosmos_service.get_work_order(work_order_id)
+                    logger.info(f"Found work order: {work_order.id} for machine: {work_order.machine_id}")
                     history = await cosmos_service.get_maintenance_history(work_order.machine_id)
                     windows = await cosmos_service.get_available_maintenance_windows(14)
 
@@ -179,11 +189,13 @@ def create_parts_ordering_a2a_app():
             try:
                 # Extract the message text from context.message
                 message = context.message
+                input_text = ""
                 if message and message.parts:
-                    text_parts = [p for p in message.parts if isinstance(p, TextPart)]
-                    input_text = text_parts[0].text if text_parts else ""
-                else:
-                    input_text = ""
+                    # Parts are wrapped in Part(root=TextPart(...)) structure
+                    for p in message.parts:
+                        if hasattr(p, 'root') and hasattr(p.root, 'text'):
+                            input_text = p.root.text
+                            break
 
                 # Initialize services
                 cosmos_endpoint = os.getenv("COSMOS_ENDPOINT")
