@@ -8,6 +8,7 @@ using System.Text;
 
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.AzureAI;
+using Microsoft.Agents.AI.A2A;
 using Microsoft.Agents.AI.Workflows;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
@@ -20,6 +21,8 @@ using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+
+using A2A;
 
 DotNetEnv.Env.TraversePath().Load();
 
@@ -58,6 +61,9 @@ builder.Services.AddSingleton(sp =>
     return new AIProjectClient(new Uri(endpoint), new DefaultAzureCredential());
 });
 
+// Register LoggerFactory for A2A agents
+builder.Services.AddSingleton<ILoggerFactory>(sp => LoggerFactory.Create(b => b.AddConsole()));
+
 var appInsightsConnectionString = configuration["ApplicationInsights:ConnectionString"];
 
 var tracerProviderBuilder = Sdk.CreateTracerProviderBuilder()
@@ -65,6 +71,7 @@ var tracerProviderBuilder = Sdk.CreateTracerProviderBuilder()
     .AddSource(SourceName, "ChatClient") // Our custom activity source(s)
     .AddSource("Microsoft.Agents.AI*") // Agent Framework telemetry
     .AddSource("AnomalyClassificationAgent", "FaultDiagnosisAgent", "RepairPlannerAgent") // Our agents
+    .AddSource("MaintenanceSchedulerAgent", "PartsOrderingAgent") // A2A agents from challenge-3
     .AddAspNetCoreInstrumentation() // Capture incoming HTTP requests
     .AddHttpClientInstrumentation() // Capture HTTP calls to OpenAI
     .AddOtlpExporter();
@@ -91,6 +98,7 @@ static async Task<IResult> AnalyzeMachine(
     AIProjectClient projectClient,
     IHttpClientFactory httpClientFactory,
     IConfiguration config,
+    ILoggerFactory loggerFactory,
     ILogger<Program> logger)
 {
     logger.LogInformation("Starting analysis for machine {MachineId}", request.machine_id);
@@ -107,7 +115,39 @@ static async Task<IResult> AnalyzeMachine(
             ? string.Empty
             : request.telemetry.GetRawText();
 
-        var workflow = AgentWorkflowBuilder.BuildSequential(anomalyClassificationAgent, faultDiagnosisAgent);
+        // Create list of agents for the workflow
+        var agents = new List<AIAgent> { anomalyClassificationAgent, faultDiagnosisAgent };
+
+        // Add A2A agents from Python app if URLs are configured
+        var httpClient = httpClientFactory.CreateClient();
+
+        var maintenanceSchedulerUrl = config["MAINTENANCE_SCHEDULER_AGENT_URL"];
+        if (!string.IsNullOrEmpty(maintenanceSchedulerUrl))
+        {
+            var maintenanceSchedulerAgent = Workflow.CreateA2AAgent(
+                httpClient, maintenanceSchedulerUrl,
+                id: "maintenance-scheduler",
+                name: "MaintenanceSchedulerAgent",
+                description: "Predictive maintenance scheduling agent from challenge-3",
+                loggerFactory);
+            agents.Add(maintenanceSchedulerAgent);
+            Console.WriteLine($"A2A Agent added: {maintenanceSchedulerAgent.Name} at {maintenanceSchedulerUrl}");
+        }
+
+        var partsOrderingUrl = config["PARTS_ORDERING_AGENT_URL"];
+        if (!string.IsNullOrEmpty(partsOrderingUrl))
+        {
+            var partsOrderingAgent = Workflow.CreateA2AAgent(
+                httpClient, partsOrderingUrl,
+                id: "parts-ordering",
+                name: "PartsOrderingAgent",
+                description: "Parts ordering agent from challenge-3",
+                loggerFactory);
+            agents.Add(partsOrderingAgent);
+            Console.WriteLine($"A2A Agent added: {partsOrderingAgent.Name} at {partsOrderingUrl}");
+        }
+
+        var workflow = AgentWorkflowBuilder.BuildSequential(agents.ToArray());
         var result = new List<Microsoft.Extensions.AI.ChatMessage>();
 
         var run = await InProcessExecution.RunAsync(workflow, telemetryJson);
@@ -201,5 +241,14 @@ static class Workflow
         }
 
         return body;
+    }
+
+    /// <summary>
+    /// Helper method to create an A2A agent from a URL
+    /// </summary>
+    internal static A2AAgent CreateA2AAgent(HttpClient httpClient, string url, string id, string name, string description, ILoggerFactory loggerFactory)
+    {
+        var a2aClient = new A2AClient(new Uri(url), httpClient);
+        return new A2AAgent(a2aClient, id, name, description, loggerFactory);
     }
 }
