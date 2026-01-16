@@ -43,14 +43,15 @@ def create_maintenance_scheduler_a2a_app():
 
     # Get the base URL from environment or use default
     # The URL should point to where this agent's RPC endpoint is accessible
-    default_url = os.getenv("MAINTENANCE_SCHEDULER_AGENT_SELF_URL", "http://localhost:8000/maintenance-scheduler/")
+    # Must use https:// to match what the .NET workflow uses via Aspire
+    default_url = os.getenv("MAINTENANCE_SCHEDULER_AGENT_SELF_URL", "https://localhost:8000/maintenance-scheduler/")
     
     agent_card = AgentCard(
         name="MaintenanceSchedulerAgent",
         description="Predictive maintenance scheduling agent that analyzes work orders, historical maintenance data, and available windows to recommend optimal maintenance schedules.",
         url=default_url,
         version="1.0.0",
-        capabilities=AgentCapabilities(streaming=False, pushNotifications=False),
+        capabilities=AgentCapabilities(streaming=True, pushNotifications=False),
         defaultInputModes=["text"],
         defaultOutputModes=["text"],
         skills=[
@@ -158,15 +159,15 @@ def create_parts_ordering_a2a_app():
     from a2a.types import AgentCard, AgentCapabilities, AgentSkill, TextPart, Message
 
     # Get the base URL from environment or use default
-    # The URL should point to where this agent's RPC endpoint is accessible
-    default_url = os.getenv("PARTS_ORDERING_AGENT_SELF_URL", "http://localhost:8000/parts-ordering/")
+    # Must use https:// to match what the .NET workflow uses via Aspire
+    default_url = os.getenv("PARTS_ORDERING_AGENT_SELF_URL", "https://localhost:8000/parts-ordering/")
 
     agent_card = AgentCard(
         name="PartsOrderingAgent",
         description="Parts ordering agent that analyzes inventory status and generates optimized parts orders from suppliers.",
         url=default_url,
         version="1.0.0",
-        capabilities=AgentCapabilities(streaming=False, pushNotifications=False),
+        capabilities=AgentCapabilities(streaming=True, pushNotifications=False),
         defaultInputModes=["text"],
         defaultOutputModes=["text"],
         skills=[
