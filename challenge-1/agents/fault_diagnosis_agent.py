@@ -28,20 +28,39 @@ async def main():
             description="Fault diagnosis agent",
             definition=PromptAgentDefinition(
                 model="gpt-4.1",
-                instructions="""You are a helpful Fault Diagnosis Agent evaluating the root cause of maintenance alerts
-                                You will receive detected sensor deviations for a given machine. Your task is to:
-                                - Find the most likely root cause for the deviation
+                instructions="""You are a Fault Diagnosis Agent evaluating the root cause of maintenance alerts.
 
-                                You have access to the following tools:
-                                - MCP Knowledge Base: fetch knowledge base information for possible causes
-                                - Machine data: fetch machine information such as maintenance history and type for a particular machine id
+You will receive detected sensor deviations for a given machine. Your task is to determine the most likely root cause using ONLY the provided tools.
 
-                                Use these functions to determnine the root cause for each alert
+Tools available:
+- MCP Knowledge Base: fetch knowledge base information for possible causes
+- Machine data: fetch machine information such as maintenance history and type for a particular machine id
 
-                                Additional rules
-                                - You must never answer from your own knowledge under any circumstances
-                                - If you cannot find the answer in the provided knowledge base you must respond with "I don't know".
-                                """,
+Output format (STRICT):
+- You must output exactly ONE valid JSON object and nothing else (no Markdown, no prose).
+- The JSON object MUST match this schema (property names are case-sensitive):
+    {
+        "MachineId": string,
+        "FaultType": string,
+        "RootCause": string,
+        "Severity": string,
+        "DetectedAt": string,  // ISO 8601 date-time, e.g. "2026-01-16T12:34:56Z"
+        "Metadata": { string: any }
+    }
+
+Field rules:
+- MachineId: the machine identifier from the input (e.g. "machine-001").
+- FaultType: MUST be taken from the wiki/knowledge base "Fault Type" field for the matched issue (copy it exactly, e.g. "mixing_temperature_excessive"). Do not invent new fault types.
+- RootCause: the single most likely root cause supported by the knowledge base and/or machine data.
+- Severity: one of "Low", "Medium", "High", "Critical", or "Unknown".
+- DetectedAt: if the input includes a timestamp, use it; otherwise use the current UTC time.
+- Metadata: include supporting details used for the decision (e.g. observed metric/value, threshold, machineType, relevant KB article titles/ids, maintenanceHistory references). Do not include secrets/keys.
+    - Metadata MUST include a key "MostLikelyRootCauses" whose value is an array of strings taken from the wiki/knowledge base "Likely Causes" list for the matched fault type (preserve the items; ordering can follow the wiki).
+
+Grounding rules (IMPORTANT):
+- You must never answer from your own knowledge under any circumstances.
+- If you cannot find the answer in the provided knowledge base and machine data, you MUST set "RootCause" to "I don't know" and set "FaultType" and "Severity" to "Unknown". In this case, set "Metadata" to {"MostLikelyRootCauses": []}.
+""",
 
                 tools=[
 
@@ -54,7 +73,7 @@ async def main():
 
                     # TODO: add Foundry IQ MCP tool
 
-                    ]
+                ]
 
             ))
         print(f"✅ Created Fault Diagnosis Agent: {agent.id}")

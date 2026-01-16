@@ -253,7 +253,7 @@ export $(cat ../.env | xargs)
 ```
 
 > [!TIP]
-> Keep your `.env` file handy throughout the hackathon. 
+> Keep your `.env` file handy throughout the hackathon.
 > You need to re-export the environment variables each time you open a new shell or when you resume a stopped Codespace.
 
 > [!CAUTION]
@@ -262,7 +262,27 @@ export $(cat ../.env | xargs)
 
 ---
 
-### Task 5: Seed Factory Sample Data
+### Task 5: Assign additional permissions
+
+You need to have `Azure AI Developer` role on the Foundry project resource
+
+```bash
+
+# Get your Entra ID (AAD) user object id
+ME_OBJECT_ID="$(az ad signed-in-user show --query id -o tsv)"
+
+# Assign "Azure AI Developer" at the AI Foundry Project resource scope
+az role assignment create \
+  --assignee-object-id "$ME_OBJECT_ID" \
+  --assignee-principal-type User \
+  --role "Azure AI Developer" \
+  --scope "$AZURE_AI_PROJECT_RESOURCE_ID"
+
+# Refresh your credentials with the new permissions
+az login --use-device-code
+```
+
+### Task 6: Seed Factory Sample Data
 
 ```bash
 
@@ -272,7 +292,7 @@ scripts/seed-data.sh
 
 ---
 
-### Task 6: Verify Deployment
+### Task 7: Verify Deployment
 
 ```bash
 # List all resources
@@ -290,7 +310,7 @@ az cosmosdb sql container list \
 
 ---
 
-### Task 7 (optional): Run Sample Queries
+### Task 8 (optional): Run Sample Queries
 
 If you want to verify or explore the seeded data, here are some sample queries you can run against the Cosmos DB.
 This can be done via the Azure Portal Data Explorer. As shown below:
@@ -357,6 +377,7 @@ az deployment group show \
 az provider register --namespace Microsoft.AlertsManagement
 az provider register --namespace Microsoft.App
 ```
+
 </details>
 
 ### Data Seeding Issues
@@ -380,6 +401,7 @@ az cosmosdb sql container list \
 # Re-run seed script (idempotent)
 bash challenge-0/scripts/seed-data.sh
 ```
+
 </details>
 
 <details>
@@ -392,6 +414,7 @@ chmod +x challenge-0/scripts/seed-data.sh
 </details>
 
 ### Connection Issues
+
 <details>
 <summary>Problem: Can't connect to Cosmos DB</summary>
 
@@ -405,15 +428,8 @@ az cosmosdb keys list \
 # Test connectivity
 curl -X GET "$COSMOS_ENDPOINT" -H "Authorization: $COSMOS_KEY"
 ```
+
 </details>
-
-### Clean Up
-> [!WARNING]
-> Only run this at the end of the hackathon
-
-```bash
-az group delete --name $RESOURCE_GROUP --yes --no-wait
-```
 
 ## 🧠 Conclusion and reflection
 
