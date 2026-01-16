@@ -3,9 +3,16 @@ from agent_framework import WorkflowBuilder, Executor, handler, WorkflowContext
 
 import os
 import sys
+import re
 import logging
 from typing import Any
 from agent_framework import ChatAgent
+
+
+def extract_work_order_id(text: str) -> str | None:
+    """Extract work order ID (wo-XXXX-XXXXXXXX) from text."""
+    match = re.search(r'wo-\d{4}-[a-f0-9]+', text, re.IGNORECASE)
+    return match.group(0) if match else None
 from agent_framework.azure import AzureAIAgentClient
 from azure.identity.aio import DefaultAzureCredential
 
@@ -102,7 +109,9 @@ def create_maintenance_scheduler_a2a_app():
                     agent = MaintenanceSchedulerAgent(project_endpoint, deployment_name, cosmos_service)
 
                     # Parse work order ID from input (default matches challenge-3 maintenance_scheduler_agent.py)
-                    work_order_id = input_text.strip() if input_text else "wo-2024-468"
+                    work_order_id = extract_work_order_id(input_text) if input_text else None
+                    if not work_order_id:
+                        work_order_id = "wo-2024-468"  # fallback default
                     logger.info(f"Looking up work order: '{work_order_id}'")
 
                     # Get work order and run prediction
@@ -214,7 +223,9 @@ def create_parts_ordering_a2a_app():
                     agent = PartsOrderingAgent(project_endpoint, deployment_name, cosmos_service)
 
                     # Parse work order ID from input (default matches challenge-3 parts_ordering_agent.py)
-                    work_order_id = input_text.strip() if input_text else "2024-468"
+                    work_order_id = extract_work_order_id(input_text) if input_text else None
+                    if not work_order_id:
+                        work_order_id = "wo-2024-468"  # fallback default
 
                     # Get work order and generate order
                     work_order = await cosmos_service.get_work_order(work_order_id)
