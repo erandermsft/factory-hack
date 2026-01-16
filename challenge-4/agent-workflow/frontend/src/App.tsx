@@ -4,6 +4,102 @@ import './App.css'
 
 import { AlarmForm, type AnalyzeMachinePayload } from './components/AlarmForm'
 import { AgentIllustration, type AgentNode } from './components/AgentIllustration'
+import type { WorkflowResponse } from './types/workflow'
+
+// Sample workflow response for demo purposes
+const DEMO_WORKFLOW_RESPONSE: WorkflowResponse = {
+  agentSteps: [
+    {
+      agentName: "AnomalyClassificationAgent_AnomalyClassificationAgent_5",
+      toolCalls: [],
+      textOutput: "",
+      finalMessage: null
+    },
+    {
+      agentName: "AnomalyClassificationAgent_AnomalyClassificationAgent_5",
+      toolCalls: [
+        {
+          toolName: "getMachine",
+          arguments: "{\"id\":\"machine-001\"}",
+          result: null
+        },
+        {
+          toolName: "getThreshold",
+          arguments: "{\"machineType\":\"tire_curing_press\"}",
+          result: null
+        }
+      ],
+      textOutput: "{\n  \"status\": \"medium\",\n  \"alerts\": [\n    {\n      \"name\": \"curing_temperature\",\n      \"severity\": \"warning\",\n      \"description\": \"Curing temperature recorded at 179.2°C, which exceeds the warning threshold of 178°C but not the critical threshold (182°C).\"\n    },\n    {\n      \"name\": \"cycle_time\",\n      \"severity\": \"warning\",\n      \"description\": \"Cycle time measured at 14.5 minutes, which exceeds the warning threshold of 14 minutes but is below the critical threshold (16 minutes).\"\n    }\n  ],\n  \"summary\": {\n    \"totalRecordsProcessed\": 2,\n    \"violations\": { \"critical\": 0, \"warning\": 2 }\n  }\n}\n\nSummary: Both curing temperature (179.2°C) and cycle time (14.5 min) for Tire Curing Press A1 are above their respective warning thresholds but below critical limits. Immediate attention is suggested to prevent escalation into critical failure. No critical violations were observed in this telemetry sample.",
+      finalMessage: null
+    },
+    {
+      agentName: "FaultDiagnosisAgent_FaultDiagnosisAgent_2",
+      toolCalls: [],
+      textOutput: "",
+      finalMessage: null
+    },
+    {
+      agentName: "FaultDiagnosisAgent_FaultDiagnosisAgent_2",
+      toolCalls: [
+        {
+          toolName: "getMachine",
+          arguments: "{\"id\":\"machine-001\"}",
+          result: null
+        }
+      ],
+      textOutput: "{\n  \"MachineId\": \"machine-001\",\n  \"FaultType\": \"curing_temperature_excessive\",\n  \"RootCause\": \"Heating element malfunction\",\n  \"Severity\": \"High\",\n  \"DetectedAt\": \"2024-06-17T00:21:13Z\"\n}",
+      finalMessage: null
+    },
+    {
+      agentName: "RepairPlannerAgent_3fb5335ca1f54fdd969e4e840d74169c",
+      toolCalls: [],
+      textOutput: "",
+      finalMessage: null
+    },
+    {
+      agentName: "RepairPlannerAgent_3fb5335ca1f54fdd969e4e840d74169c",
+      toolCalls: [
+        {
+          toolName: "GetAvailableTechnicians",
+          arguments: "{\"requiredSkills\":[\"electrical\",\"heating systems\"],\"department\":\"Maintenance\"}",
+          result: "[]"
+        },
+        {
+          toolName: "CreateWorkOrder",
+          arguments: "{\"machineId\":\"machine-001\",\"faultType\":\"curing_temperature_excessive\",\"priority\":\"high\"}",
+          result: "{\"workOrderId\":\"wo-2026-26e49738\",\"status\":\"created\"}"
+        }
+      ],
+      textOutput: "Work Order ID: WO-2026-26E49738\n\nMachine ID: machine-001\n\nFault Type: curing_temperature_excessive (Heating element malfunction)\n\nPriority: High\n\nAssigned Technician: None currently available with required skills.\n\nEstimated Duration: 120 minutes\n\nRepair Tasks:\n1. Lock out and tag out (LOTO) the machine\n2. Test heating element resistance\n3. Replace component if faulty\n4. Recalibrate temperature sensor",
+      finalMessage: null
+    },
+    {
+      agentName: "MaintenanceSchedulerAgent_b8a9a9a43b91474689180c7957021038",
+      toolCalls: [],
+      textOutput: "",
+      finalMessage: null
+    },
+    {
+      agentName: "MaintenanceSchedulerAgent_b8a9a9a43b91474689180c7957021038",
+      toolCalls: [],
+      textOutput: "Error processing maintenance schedule request: Work order not found",
+      finalMessage: null
+    },
+    {
+      agentName: "PartsOrderingAgent_83df9000225a48c999e49d058cb54c6d",
+      toolCalls: [],
+      textOutput: "",
+      finalMessage: null
+    },
+    {
+      agentName: "PartsOrderingAgent_83df9000225a48c999e49d058cb54c6d",
+      toolCalls: [],
+      textOutput: "Error processing parts order request: Work order not found",
+      finalMessage: null
+    }
+  ],
+  finalMessage: "Workflow completed with errors in maintenance scheduling and parts ordering."
+}
 
 function App() {
   const apiBaseUrl = import.meta.env.VITE_API_URL as string | undefined
@@ -28,6 +124,16 @@ function App() {
         name: 'Repair Planner Agent',
         description: 'Drafts a repair plan, parts list, and recommended technician actions.',
       },
+      {
+        id: 'scheduler',
+        name: 'Maintenance Scheduler Agent',
+        description: 'Schedules maintenance windows and assigns technicians based on availability.',
+      },
+      {
+        id: 'parts',
+        name: 'Parts Ordering Agent',
+        description: 'Orders required parts from inventory or external suppliers.',
+      },
     ],
     [],
   )
@@ -35,7 +141,7 @@ function App() {
   const [submittedPayload, setSubmittedPayload] = useState<AnalyzeMachinePayload | null>(null)
   const [runState, setRunState] = useState<'idle' | 'running' | 'completed'>('idle')
   const activeIndex: number | null = null
-  const [apiResponse, setApiResponse] = useState<unknown>(null)
+  const [apiResponse, setApiResponse] = useState<WorkflowResponse | null>(null)
   const [apiError, setApiError] = useState<string | null>(null)
 
   const callAnalyzeMachine = async (payload: AnalyzeMachinePayload) => {
@@ -68,12 +174,25 @@ function App() {
         throw new Error(message)
       }
 
-      setApiResponse(body)
+      setApiResponse(body as WorkflowResponse)
       setRunState('completed')
     } catch (err) {
       setApiError(err instanceof Error ? err.message : 'Request failed')
       setRunState('idle')
     }
+  }
+
+  const loadDemoData = () => {
+    setSubmittedPayload({
+      machine_id: 'machine-001',
+      telemetry: [
+        { metric: 'curing_temperature', value: 179.2 },
+        { metric: 'cycle_time', value: 14.5 },
+      ],
+    })
+    setApiResponse(DEMO_WORKFLOW_RESPONSE)
+    setRunState('completed')
+    setApiError(null)
   }
 
   const reset = () => {
@@ -121,6 +240,14 @@ function App() {
               >
                 Reset
               </button>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={loadDemoData}
+                disabled={runState === 'running'}
+              >
+                Load Demo
+              </button>
               <div className="muted">
                 {runState === 'running'
                   ? 'Calling API…'
@@ -132,7 +259,12 @@ function App() {
           </div>
 
           <div className="card">
-            <AgentIllustration agents={agents} activeIndex={activeIndex} runState={runState} />
+            <AgentIllustration 
+              agents={agents} 
+              activeIndex={activeIndex} 
+              runState={runState} 
+              workflowResponse={apiResponse}
+            />
 
             <div className="submitted-preview">
               <div className="section-header">
