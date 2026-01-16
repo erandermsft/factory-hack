@@ -77,7 +77,7 @@ export function AlarmForm(props: {
           disabled={props.disabled}
           aria-disabled={props.disabled}
         >
-          {props.disabled ? 'Running…' : 'Submit alarm'}
+          {props.disabled ? 'Running…' : 'Trigger anomaly'}
         </button>
       </div>
 

@@ -78,7 +78,7 @@ def create_maintenance_scheduler_a2a_app():
                 input_text = ""
                 if message and message.parts:
                     # Parts are wrapped in Part(root=TextPart(...)) structure
-                    for p in message.parts:
+                    for p in reversed(message.parts):
                         logger.info(f"Part: type={type(p)}, root={getattr(p, 'root', None)}")
                         # Access the inner TextPart via p.root
                         if hasattr(p, 'root') and hasattr(p.root, 'text'):
@@ -190,10 +190,12 @@ def create_parts_ordering_a2a_app():
             try:
                 # Extract the message text from context.message
                 message = context.message
+                
                 input_text = ""
                 if message and message.parts:
                     # Parts are wrapped in Part(root=TextPart(...)) structure
-                    for p in message.parts:
+                    # Get the last part to capture the previous agent's message, not the user's
+                    for p in reversed(message.parts):
                         if hasattr(p, 'root') and hasattr(p.root, 'text'):
                             input_text = p.root.text
                             break
