@@ -9,5 +9,9 @@
     "search.exclude": {
         "example-solution": true,
         "**/example-solution/**": true
+    },
+    "workbench.editorAssociations": {
+        "*.md": "vscode.markdown.preview.editor"
     }
+
 }

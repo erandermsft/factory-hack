@@ -57,6 +57,7 @@ async def main():
             async with (
                 AzureAIClient(credential=credential).create_agent(
                     name="AnomalyClassificationAgent",
+                    description="Anomaly classification agent",
                     instructions="""You are a Anomaly Classification Agent evaluating machine anomalies for warning and critical threshold violations.
                             You will receive anomaly data for a given machine. Your task is to:
                             - Validate each metric against the threshold values 

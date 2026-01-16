@@ -72,6 +72,7 @@ async def main():
             endpoint=project_endpoint, credential=DefaultAzureCredential())
         agent = project_client.agents.create_version(
             agent_name="AnomalyClassificationAgent",
+            description="Anomaly classification agent",
             definition=PromptAgentDefinition(
                 model=model_name,
                 instructions="""You are a Anomaly Classification Agent evaluating machine anomalies for warning and critical threshold violations.

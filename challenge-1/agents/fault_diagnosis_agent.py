@@ -25,6 +25,7 @@ async def main():
             endpoint=project_endpoint, credential=DefaultAzureCredential())
         agent = project_client.agents.create_version(
             agent_name="FaultDiagnosisAgent",
+            description="Fault diagnosis agent",
             definition=PromptAgentDefinition(
                 model="gpt-4.1",
                 instructions="""You are a helpful Fault Diagnosis Agent evaluating the root cause of maintenance alerts
