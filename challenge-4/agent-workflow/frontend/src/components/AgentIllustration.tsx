@@ -25,12 +25,16 @@ function statusLabel(status: AgentStatus) {
   }
 }
 
-/** Extracts a short summary from text output */
+/** Extracts a short summary from text output, respecting word boundaries */
 function getSummary(text: string, maxLength = 150): string {
   if (!text) return ''
   const trimmed = text.trim()
   if (trimmed.length <= maxLength) return trimmed
-  return trimmed.substring(0, maxLength) + '…'
+  
+  // Find the last space before maxLength to avoid cutting words
+  const lastSpace = trimmed.lastIndexOf(' ', maxLength)
+  const cutPoint = lastSpace > maxLength * 0.5 ? lastSpace : maxLength
+  return trimmed.substring(0, cutPoint) + '…'
 }
 
 /** Checks if the step has any meaningful content to display */
@@ -41,7 +45,14 @@ function hasContent(step: AgentStepResult): boolean {
 /** Checks if text output indicates an error */
 function isErrorOutput(text: string): boolean {
   const lowerText = text.toLowerCase()
-  return lowerText.includes('error') && lowerText.includes('not found')
+  // Check for various error patterns
+  return (
+    lowerText.includes('error') ||
+    lowerText.includes('failed') ||
+    lowerText.includes('exception') ||
+    lowerText.includes('unable to') ||
+    lowerText.includes('could not')
+  )
 }
 
 /** Tool call display component */
@@ -153,10 +164,12 @@ export function AgentIllustration(props: {
   if (workflowResponse?.agentSteps) {
     for (const step of workflowResponse.agentSteps) {
       const normalizedId = normalizeAgentName(step.agentName)
-      if (!agentEventsMap.has(normalizedId)) {
-        agentEventsMap.set(normalizedId, [])
+      const existingSteps = agentEventsMap.get(normalizedId)
+      if (existingSteps) {
+        existingSteps.push(step)
+      } else {
+        agentEventsMap.set(normalizedId, [step])
       }
-      agentEventsMap.get(normalizedId)!.push(step)
     }
   }
 
