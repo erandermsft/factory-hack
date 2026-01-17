@@ -317,10 +317,35 @@
       "identity": {
         "type": "SystemAssigned"
       },
-      "properties": { },
+      "properties": {
+      },
       "dependsOn": [
-        "[resourceId('Microsoft.CognitiveServices/accounts', variables('aiFoundryName'))]"
+        "[resourceId('Microsoft.CognitiveServices/accounts', variables('aiFoundryName'))]",
+        "[resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))]"
       ]
+    },
+    {
+      "type": "Microsoft.CognitiveServices/accounts/projects/connections",
+      "apiVersion": "2025-04-01-preview",
+      "name": "[format('{0}/{1}/{2}', variables('aiFoundryName'), variables('aiProjectName'), variables('applicationInsightsName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.CognitiveServices/accounts/projects', variables('aiFoundryName'), variables('aiProjectName'))]",
+        "[resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))]"
+      ],
+      "properties": {
+        "authType": "ApiKey",
+        "category": "AppInsights",
+        "target": "[resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))]",
+        "useWorkspaceManagedIdentity": false,
+        "isSharedToAll": false,
+        "credentials": {
+          "key": "[reference(resourceId('Microsoft.Insights/components', variables('applicationInsightsName')), '2020-02-02').InstrumentationKey]"
+        },
+        "metadata": {
+          "ApiType": "Azure",
+          "ResourceId": "[resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))]"
+        }
+      }
     },
     {
       "type": "Microsoft.CognitiveServices/accounts/deployments",
