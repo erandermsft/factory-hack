@@ -153,11 +153,11 @@ function AgentStepEvents({ steps }: { steps: AgentStepResult[] }) {
 
 export function AgentIllustration(props: {
   agents: AgentNode[]
-  activeIndex: number | null
+  activeAgentId?: string | null
   runState: 'idle' | 'running' | 'completed'
   workflowResponse?: WorkflowResponse | null
 }) {
-  const { agents, activeIndex, runState, workflowResponse } = props
+  const { agents, activeAgentId, runState, workflowResponse } = props
 
   // Build a map of agent events from the workflow response
   const agentEventsMap = new Map<string, AgentStepResult[]>()
@@ -173,11 +173,16 @@ export function AgentIllustration(props: {
     }
   }
 
-  const getStatus = (agentId: string, index: number): AgentStatus => {
+  const getStatus = (agentId: string): AgentStatus => {
     if (runState === 'idle') return 'idle'
     
+    // During streaming, check if this agent is currently active
+    if (runState === 'running' && activeAgentId === agentId) {
+      return 'running'
+    }
+    
     // If we have workflow response, determine status from actual data
-    if (runState === 'completed' && workflowResponse) {
+    if (workflowResponse) {
       const steps = agentEventsMap.get(agentId)
       if (steps && steps.some(s => hasContent(s))) {
         // Check if the output indicates an error
@@ -187,19 +192,22 @@ export function AgentIllustration(props: {
         }
         return 'done'
       }
-      // If no steps for this agent but workflow completed, it might have been skipped
+      // If no steps for this agent but we're still running, it's pending
+      if (runState === 'running') {
+        return 'pending'
+      }
+      // If no steps for this agent and workflow completed, it might have been skipped
       return steps && steps.length > 0 ? 'done' : 'pending'
     }
     
     if (runState === 'completed') return 'done'
-    if (activeIndex == null) return 'pending'
-    if (index < activeIndex) return 'done'
-    if (index === activeIndex) return 'running'
     return 'pending'
   }
 
-  const activeAgent =
-    activeIndex == null ? null : agents[Math.min(activeIndex, agents.length - 1)]
+  // Get the active agent for display
+  const activeAgent = activeAgentId 
+    ? agents.find(a => a.id === activeAgentId) 
+    : null
 
   // Count agents with events
   const agentsWithEvents = agents.filter(a => {
@@ -228,7 +236,7 @@ export function AgentIllustration(props: {
 
       <ol className="agent-list">
         {agents.map((agent, index) => {
-          const status = getStatus(agent.id, index)
+          const status = getStatus(agent.id)
           const steps = agentEventsMap.get(agent.id)
           
           return (
@@ -250,8 +258,8 @@ export function AgentIllustration(props: {
                 </div>
                 <div className="agent-node__desc">{agent.description}</div>
                 
-                {/* Show agent events when workflow is completed */}
-                {runState === 'completed' && steps && (
+                {/* Show agent events during streaming (running) or when completed */}
+                {(runState === 'running' || runState === 'completed') && steps && (
                   <AgentStepEvents steps={steps} />
                 )}
               </div>
