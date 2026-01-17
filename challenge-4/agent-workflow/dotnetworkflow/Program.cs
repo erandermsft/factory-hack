@@ -103,6 +103,7 @@ using var tracerProvider = tracerProviderBuilder.Build();
 var app = builder.Build();
 app.UseCors();
 app.MapPost("/api/analyze_machine", AnalyzeMachine);
+app.MapPost("/api/analyze_machine_stream", AnalyzeMachineStream);
 app.MapGet("/health", () => Results.Ok(new { Status = "Healthy", Timestamp = DateTimeOffset.UtcNow }));
 app.Run();
 
@@ -326,7 +327,276 @@ static async Task<IResult> AnalyzeMachine(
     }
 }
 
-record AnalyzeRequest(string machine_id, JsonElement telemetry);
+/// <summary>
+/// Streaming endpoint that sends workflow events as Server-Sent Events (SSE).
+/// Events are streamed in near real-time as agents process the workflow.
+/// </summary>
+static async Task AnalyzeMachineStream(
+    AnalyzeRequest request,
+    AIProjectClient projectClient,
+    IHttpClientFactory httpClientFactory,
+    IConfiguration config,
+    ILoggerFactory loggerFactory,
+    ILogger<Program> logger,
+    HttpContext httpContext)
+{
+    logger.LogInformation("Starting streaming analysis for machine {MachineId}", request.machine_id);
+
+    // Set up SSE response headers
+    httpContext.Response.ContentType = "text/event-stream";
+    httpContext.Response.Headers.CacheControl = "no-cache";
+    httpContext.Response.Headers.Connection = "keep-alive";
+    
+    var jsonOptions = new JsonSerializerOptions 
+    { 
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = false 
+    };
+
+    try
+    {
+        AIAgent anomalyClassificationAgent = projectClient.GetAIAgent("AnomalyClassificationAgent");
+        AIAgent faultDiagnosisAgent = projectClient.GetAIAgent("FaultDiagnosisAgent");
+
+        var telemetryJson = JsonSerializer.Serialize(request);
+
+        // Create list of agents for the workflow
+        var agents = new List<AIAgent> { anomalyClassificationAgent, faultDiagnosisAgent };
+
+        var aoaiEndpoint = config["AZURE_OPENAI_ENDPOINT"];
+        var aoaiDeployment = config["AZURE_OPENAI_DEPLOYMENT_NAME"] ?? "gpt-4o";
+        var cosmosEndpoint = config["COSMOS_ENDPOINT"];
+        var cosmosKey = config["COSMOS_KEY"];
+        var cosmosDatabase = config["COSMOS_DATABASE"] ?? "FactoryOpsDB";
+
+        if (!string.IsNullOrEmpty(aoaiEndpoint))
+        {
+            try
+            {
+                CosmosDbService? cosmosService = null;
+                if (!string.IsNullOrEmpty(cosmosEndpoint) && !string.IsNullOrEmpty(cosmosKey))
+                {
+                    cosmosService = new CosmosDbService(
+                        cosmosEndpoint, cosmosKey, cosmosDatabase,
+                        loggerFactory.CreateLogger<CosmosDbService>());
+                }
+
+                var repairPlannerAgent = RepairPlannerAgentFactory.Create(
+                    aoaiEndpoint, aoaiDeployment, cosmosService, loggerFactory);
+                agents.Add(repairPlannerAgent);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Could not create RepairPlannerAgent - skipping");
+            }
+        }
+
+        // Add A2A agents if configured
+        var maintenanceSchedulerUrl = config["MAINTENANCE_SCHEDULER_AGENT_URL"];
+        if (!string.IsNullOrEmpty(maintenanceSchedulerUrl))
+        {
+            var cardResolver = new A2ACardResolver(new Uri(maintenanceSchedulerUrl + "/"));
+            var maintenanceSchedulerAgent = await cardResolver.GetAIAgentAsync();
+            agents.Add(maintenanceSchedulerAgent);
+        }
+
+        var partsOrderingUrl = config["PARTS_ORDERING_AGENT_URL"];
+        if (!string.IsNullOrEmpty(partsOrderingUrl))
+        {
+            var cardResolver = new A2ACardResolver(new Uri(partsOrderingUrl + "/"));
+            var partsOrderingAgent = await cardResolver.GetAIAgentAsync();
+            agents.Add(partsOrderingAgent);
+        }
+
+        var workflow = AgentWorkflowBuilder.BuildSequential(agents.ToArray());
+        
+        // Use streaming execution - StreamAsync returns a StreamingRun
+        await using var run = await InProcessExecution.StreamAsync(workflow, telemetryJson);
+        
+        // Send a TurnToken to start the workflow with event emission enabled
+        await run.TrySendMessageAsync(new TurnToken(emitEvents: true));
+        
+        string? currentAgentName = null;
+        var currentAgentStep = new StreamingAgentStep();
+        
+        // Watch the stream and emit events as they happen
+        await foreach (WorkflowEvent evt in run.WatchStreamAsync(httpContext.RequestAborted))
+        {
+            // Track when an executor (agent) starts
+            if (evt is ExecutorInvokedEvent executorInvoked)
+            {
+                // If we have a previous agent step with content, send it as complete
+                if (!string.IsNullOrEmpty(currentAgentStep.AgentName) && 
+                    (currentAgentStep.ToolCalls.Count > 0 || !string.IsNullOrEmpty(currentAgentStep.TextOutput)))
+                {
+                    currentAgentStep.Status = "done";
+                    await SendSseEventAsync(httpContext, "agent_complete", currentAgentStep, jsonOptions);
+                }
+                
+                currentAgentName = executorInvoked.ExecutorId ?? "UnknownAgent";
+                currentAgentStep = new StreamingAgentStep { AgentName = currentAgentName, Status = "running" };
+                
+                await SendSseEventAsync(httpContext, "agent_started", 
+                    new { agentName = currentAgentName }, jsonOptions);
+                
+                logger.LogInformation("Streaming: Agent started: {AgentName}", currentAgentName);
+            }
+            else if (evt is ExecutorCompletedEvent executorCompleted)
+            {
+                currentAgentStep.FinalMessage = executorCompleted.Data?.ToString();
+                currentAgentStep.Status = "done";
+                
+                await SendSseEventAsync(httpContext, "agent_complete", currentAgentStep, jsonOptions);
+                
+                logger.LogInformation("Streaming: Agent completed: {AgentName}", currentAgentName);
+                
+                // Reset for next agent
+                currentAgentStep = new StreamingAgentStep();
+            }
+            else if (evt is AgentRunUpdateEvent e)
+            {
+                if (e.Update.Contents.OfType<FunctionCallContent>().FirstOrDefault() is FunctionCallContent call)
+                {
+                    var toolCall = new ToolCallInfo
+                    {
+                        ToolName = call.Name,
+                        Arguments = call.Arguments != null 
+                            ? JsonSerializer.Serialize(call.Arguments) 
+                            : null
+                    };
+                    currentAgentStep.ToolCalls.Add(toolCall);
+                    
+                    await SendSseEventAsync(httpContext, "tool_call", new 
+                    { 
+                        agentName = currentAgentName, 
+                        toolName = call.Name,
+                        arguments = toolCall.Arguments 
+                    }, jsonOptions);
+                    
+                    logger.LogInformation("Streaming: Tool call '{ToolName}'", call.Name);
+                }
+                else if (e.Update.Contents.OfType<FunctionResultContent>().FirstOrDefault() is FunctionResultContent funcResult)
+                {
+                    var lastToolCall = currentAgentStep.ToolCalls.LastOrDefault();
+                    if (lastToolCall != null)
+                    {
+                        lastToolCall.Result = funcResult.Result?.ToString();
+                        
+                        await SendSseEventAsync(httpContext, "tool_result", new 
+                        { 
+                            agentName = currentAgentName, 
+                            toolName = lastToolCall.ToolName,
+                            result = lastToolCall.Result 
+                        }, jsonOptions);
+                    }
+                }
+#pragma warning disable MEAI001
+                else if (e.Update.Contents.OfType<Microsoft.Extensions.AI.McpServerToolCallContent>().FirstOrDefault() is McpServerToolCallContent mcpCall)
+                {
+                    var toolCall = new ToolCallInfo
+                    {
+                        ToolName = mcpCall.ToolName,
+                        Arguments = mcpCall.Arguments != null 
+                            ? JsonSerializer.Serialize(mcpCall.Arguments) 
+                            : null
+                    };
+                    currentAgentStep.ToolCalls.Add(toolCall);
+                    
+                    await SendSseEventAsync(httpContext, "tool_call", new 
+                    { 
+                        agentName = currentAgentName, 
+                        toolName = mcpCall.ToolName,
+                        arguments = toolCall.Arguments 
+                    }, jsonOptions);
+                }
+                else if (e.Update.Contents.OfType<Microsoft.Extensions.AI.McpServerToolResultContent>().FirstOrDefault() is McpServerToolResultContent mcpCallResult)
+                {
+                    var lastToolCall = currentAgentStep.ToolCalls.LastOrDefault();
+                    if (lastToolCall != null)
+                    {
+                        lastToolCall.Result = mcpCallResult.Output?.ToString();
+                        
+                        await SendSseEventAsync(httpContext, "tool_result", new 
+                        { 
+                            agentName = currentAgentName, 
+                            toolName = lastToolCall.ToolName,
+                            result = lastToolCall.Result 
+                        }, jsonOptions);
+                    }
+                }
+#pragma warning restore MEAI001
+                else if (e.Update.Contents.OfType<TextContent>().FirstOrDefault() is TextContent textContent)
+                {
+                    if (textContent.Text != null)
+                    {
+                        currentAgentStep.TextOutput += textContent.Text;
+                        
+                        // Stream text tokens as they arrive
+                        await SendSseEventAsync(httpContext, "text_token", new 
+                        { 
+                            agentName = currentAgentName, 
+                            text = textContent.Text 
+                        }, jsonOptions);
+                    }
+                }
+            }
+            else if (evt is WorkflowOutputEvent output)
+            {
+                // Send final agent step if it has content
+                if (!string.IsNullOrEmpty(currentAgentStep.AgentName) && 
+                    (currentAgentStep.ToolCalls.Count > 0 || !string.IsNullOrEmpty(currentAgentStep.TextOutput)))
+                {
+                    currentAgentStep.Status = "done";
+                    await SendSseEventAsync(httpContext, "agent_complete", currentAgentStep, jsonOptions);
+                }
+
+                string? finalMessage = null;
+                foreach (var msg in evt.Data as List<Microsoft.Extensions.AI.ChatMessage> ?? new List<Microsoft.Extensions.AI.ChatMessage>())
+                {
+                    if (msg.Role == ChatRole.Assistant)
+                    {
+                        foreach (Microsoft.Extensions.AI.AIContent content in msg.Contents)
+                        {
+                            if (content is TextContent tc && !string.IsNullOrWhiteSpace(tc.Text))
+                            {
+                                finalMessage = tc.Text;
+                            }
+                        }
+                    }
+                }
+                
+                await SendSseEventAsync(httpContext, "workflow_complete", new 
+                { 
+                    finalMessage 
+                }, jsonOptions);
+            }
+        }
+        
+        // Send done event to signal end of stream
+        await SendSseEventAsync(httpContext, "done", new { }, jsonOptions);
+    }
+    catch (OperationCanceledException)
+    {
+        logger.LogInformation("Streaming was cancelled for machine {MachineId}", request.machine_id);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Streaming workflow failed");
+        await SendSseEventAsync(httpContext, "error", new { message = ex.Message }, 
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+    }
+}
+
+/// <summary>
+/// Helper method to send an SSE event to the client.
+/// </summary>
+static async Task SendSseEventAsync<T>(HttpContext context, string eventType, T data, JsonSerializerOptions jsonOptions)
+{
+    var json = JsonSerializer.Serialize(data, jsonOptions);
+    var sseMessage = $"event: {eventType}\ndata: {json}\n\n";
+    await context.Response.WriteAsync(sseMessage);
+    await context.Response.Body.FlushAsync();
+}
 
 static class Workflow
 {
@@ -379,6 +649,8 @@ static class Workflow
     }
 }
 
+record AnalyzeRequest(string machine_id, JsonElement telemetry);
+
 /// <summary>
 /// Represents the complete workflow response with detailed agent execution info
 /// </summary>
@@ -407,4 +679,16 @@ public class ToolCallInfo
     public string ToolName { get; set; } = string.Empty;
     public string? Arguments { get; set; }
     public string? Result { get; set; }
+}
+
+/// <summary>
+/// Represents a streaming agent step with real-time status
+/// </summary>
+public class StreamingAgentStep
+{
+    public string AgentName { get; set; } = string.Empty;
+    public string Status { get; set; } = "pending";
+    public List<ToolCallInfo> ToolCalls { get; set; } = new();
+    public string TextOutput { get; set; } = string.Empty;
+    public string? FinalMessage { get; set; }
 }
