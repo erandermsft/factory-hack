@@ -1,79 +1,42 @@
 # Challenge 0: Environment Setup
 
-Welcome to Challenge 0!
+Welcome to your very first challenge! In this challenge we will set the foundation to conduct this hackathon. You will deploy the required resources in Azure, create your development environment and all the assets necessary for the subsequent challenges. By completing this challenge, you will set up the foundation for the rest of the hackathon.
 
-This challenge sets up a complete Azure environment for a **tire manufacturing factory** that produces automotive tires.
+If something is not working correctly, please do let your coach know!
 
 **Expected duration**: 45-60 min
 **Prerequisites**:
 
-1. **Azure Subscription** with permissions to create resources
-2. **GitHub Account** to fork the repository
-3. **GitHub Codespaces** access
-4. **Azure CLI** (pre-installed in Codespaces)
+- **Azure Subscription** with permissions to create resources
+- **GitHub Account** to fork the repository
+- **GitHub Codespaces** access
+- **Azure CLI** (pre-installed in Codespaces)
 
 ## 🎯 Objective
 
-- Set up the Azure infrastructure and seed initial data for the tire factory predictive maintenance multi-agent system.
-- Understand the business scenario for the hackathon and what problem we are trying to solve.
+The goals for this challenge are
+
+1. Provision the Azure resources needed for the upcoming challenges.
+2. Seed sample data for the tire factory predictive maintenance multi-agent system.
 
 ## 🧭 Context and background information
 
-[TODO: add more explanation]
-<details>
-<summary>Technologies Used</summary>
+A number of different Azure Resources are used as part of this hackathon.
 
-- Azure Resource Manager (ARM Templates)
-- Azure Cosmos DB
-- Microsoft Foundry
-- Azure Cognitive Search
-- Azure Container Apps
-- GitHub Codespaces
+The following image illustrates the setup
+![Azure Resources](./images/azure-resources.png)
 
-</details>
+All resources resides in one Resource Group.
 
-<details>
-<summary>Tire Manufacturing Equipment Monitored</summary>
+- A **Foundry Account** with a **Foundry Project** with model deployments for **gpt-4.1**, **gpt-4o-mini** and **text-embedding-ada-002**
+- **API Management** with two API proxies that reads data from **Cosmos DB**
+- **Cosmos DB** with a database including data for machines, technicians, work orders etc
+- **Storage Account** with knowledge base wiki articles in markdown
+- **Application Insights** and **Log Analytics** for logging
+- **AI Search** to query data
+- **Container Registry** and **Container Apps Environment** for running containers
 
-- **Tire Curing Presses** - Vulcanize green tires into finished products
-- **Tire Building Machines** - Assemble tire components on a building drum
-- **Tire Extruders** - Process rubber compounds into tire components
-- **Tire Uniformity Machines** - Quality control and performance testing
-- **Banbury Mixers** - Mix rubber compounds with additives
-
-</details>
-
-### What Gets Deployed
-
-<details>
-  <summary>Azure Resources (15+ services)</summary>
-
-  **Data & Storage:**
-
-- Azure Cosmos DB (NoSQL database)
-- Azure Storage Account
-- Azure Cognitive Search
-
-  **AI & Analytics:**
-
-- Microsoft Foundry Hub & Project
-- GPT-4.1-mini deployment
-- Azure Content Safety
-- Application Insights
-
-  **Compute:**
-
-- Azure Container Apps Environment
-- Azure Container App (API)
-- Azure Container Registry
-- Azure API Management
-
-  **Monitoring:**
-
-- Log Analytics Workspace
-
-</details>
-
+Sample data is seed into different **Cosmos DB** containers that will be queried during the exercises.
 <details>
 <summary>Cosmos DB Data Model (7 Containers)</summary>
 
@@ -185,15 +148,30 @@ Sample parts with low stock trigger reorder alerts.
 
 ## ✅ Tasks
 
-### Task 1: Fork & Launch Codespace
+### Task 1: Fork the repository
 
-1. Fork this repository to your GitHub account
-2. Open GitHub Codespaces from your fork
-3. Wait for the environment to initialize
+Before you start, please fork this repository to your GitHub account by clicking the Fork button in the upper right corner of the repository's main screen (or follow the documentation). This will allow you to make changes to the repository and save your progress.
 
 ---
 
-### Task 2: Login to Azure
+### Task 2: Launch the development environment
+
+GitHub Codespaces is a cloud-based development environment that allows you to code from anywhere. It provides a fully configured environment that can be launched directly from any GitHub repository, saving you from lengthy setup times. You can access Codespaces from your browser, Visual Studio Code, or the GitHub CLI, making it easy to work from virtually any device.
+
+To open GitHub Codespaces, click on the button below:
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/)
+
+Please select your forked repository from the dropdown and, if necessary, adjust other settings of GitHub Codespace.
+
+> [!NOTE]
+> If GitHub Codespaces is not enabled in your organization, you can enable it by following the instructions [here](https://docs.github.com/en/codespaces/managing-codespaces-for-your-organization/enabling-or-disabling-github-codespaces-for-your-organization), or, if you cannot change your GitHub organization's settings, create a free personal GitHub account [here](https://github.com/signup?ref_cta=Sign+up&ref_loc=header+logged+out&ref_page=%2F&source=header-home). The Github Free Plan includes 120 core hours per month, equivalent to 60 hours on a 2-core machine, along with 15 GB of storage.
+
+---
+
+### Task 3: Login to Azure
+
+Before anything else, let's log in into the CLI with our account. Please paste the code underneath and follow the necessary instructions.
 
 ```bash
 az login --use-device-code
@@ -201,7 +179,9 @@ az login --use-device-code
 
 ---
 
-### Task 3: Deploy Resources
+### Task 4: Deploy Resources
+
+In this step you create the resources that will be used throughout the day.
 
 > [!NOTE]
 > Depending on the setup for the hackathon the Azure resources might already have been provisioned for you and you can then skip this step.
@@ -230,11 +210,17 @@ az deployment group create \
 
 ⏱️ Deployment takes approximately 5-10 minutes
 
-[TODO: add steps how to add yourself as AI Developer on Foundry portal resource]
+### Task 5: Verify the creation of your resources
+
+Go to your [`Azure Portal`](https://portal.azure.com/) and find your Resource Group hat should by now contain some resources and look like this:
+
+![Azure Portal Resources](./images/azure-portal-resources.png)
 
 ---
 
-### Task 4: Configure Environment Variables
+### Task 6: Retrieve keys for environment variables
+
+After deploying resources, configure environment variables in the `.env` file. Ensure you're logged into Azure CLI, then run the get-keys script to automatically populate the required values.
 
 > [!IMPORTANT]
 > Wait until all Azure resources are successfully deployed before starting this task.
@@ -262,9 +248,9 @@ export $(cat ../.env | xargs)
 
 ---
 
-### Task 5: Assign additional permissions
+### Task 7: Assign additional permissions
 
-You need to have `Azure AI Developer` role on the Foundry project resource
+To perform certain tasks in the hackathon you need additional permissions, more specifically the `Azure AI Developer` role on the Foundry project resource
 
 ```bash
 
@@ -282,7 +268,8 @@ az role assignment create \
 az login --use-device-code
 ```
 
-### Task 6: Seed Factory Sample Data
+### Task 8: Seed Factory Sample Data
+As mentioned in [Context and background information](#-context-and-background-information) there are a lot of data sources that will be used in this Hackathon. Let's run a script to upload the data to **Cosmos DB**, **Storage Account** and create the needed APIs in **API Management** 
 
 ```bash
 
@@ -292,25 +279,7 @@ scripts/seed-data.sh
 
 ---
 
-### Task 7: Verify Deployment
-
-```bash
-# List all resources
-az resource list \
-  --resource-group $RESOURCE_GROUP \
-  --output table
-
-# Check Cosmos DB
-az cosmosdb sql container list \
-  --account-name $(az cosmosdb list -g $RESOURCE_GROUP --query "[0].name" -o tsv) \
-  --resource-group $RESOURCE_GROUP \
-  --database-name FactoryOpsDB \
-  --output table
-```
-
----
-
-### Task 8 (optional): Run Sample Queries
+### Task 9 (optional): Run Sample Queries
 
 If you want to verify or explore the seeded data, here are some sample queries you can run against the Cosmos DB.
 This can be done via the Azure Portal Data Explorer. As shown below:
@@ -349,19 +318,7 @@ WHERE ARRAY_CONTAINS(c.skills, "tire_curing_press")
 </details>
 ---
 
-### Success Criteria
-
-- [ ] All Azure resources deployed (15+ services)  
-- [ ] `.env` file configured with connection strings  
-- [ ] Cosmos DB contains 7 containers  
-- [ ] **65+ data items** seeded across all containers  
-- [ ] Can query machines and see telemetry warnings  
-- [ ] AI Foundry project accessible with GPT-4.1-mini  
-- [ ] Cognitive Search service running  
-
 ## 🛠️ Troubleshooting and FAQ
-
-### Deployment Issues
 
 <details>
 <summary>Problem: ARM template deployment fails</summary>
@@ -379,8 +336,6 @@ az provider register --namespace Microsoft.App
 ```
 
 </details>
-
-### Data Seeding Issues
 
 <details>  
 <summary>Problem: Seed script fails</summary>
@@ -413,8 +368,6 @@ chmod +x challenge-0/scripts/seed-data.sh
 
 </details>
 
-### Connection Issues
-
 <details>
 <summary>Problem: Can't connect to Cosmos DB</summary>
 
@@ -433,15 +386,7 @@ curl -X GET "$COSMOS_ENDPOINT" -H "Authorization: $COSMOS_KEY"
 
 ## 🧠 Conclusion and reflection
 
-🎉 Congratulations! Your tire factory environment is ready. You have provisioned a complete Tire Factory demo environment including
-
-- 5 production machines with realistic specifications
-- 13 operating thresholds for anomaly detection
-- 10 telemetry readings (including 5 with warnings!)
-- 10 troubleshooting knowledge articles
-- 16 spare parts inventory items
-- 6 skilled maintenance technicians
-- 5 historical work orders
+🎉 Congratulations! Your sample tire factory environment is ready. 
 
 This forms the complete foundation for your multi-agent predictive maintenance hackathon system
 
@@ -455,14 +400,14 @@ Time to build some intelligent agents!
 > - Azure Key Vault for secrets management
 > - RBAC for fine-grained access control
 
-**Next step:** [Challenge 1](../challenge-1/challenge-1.md) - Building Agent Framework Agents for Anomaly Classification and Fault Diagnosis
-
-If you want to expand your knowledge on what we-ve covered in this challenge, have a look at the content below:
+If you want to expand your knowledge on what we have covered in this challenge, have a look at the content below:
 
 - [Azure Cosmos DB Documentation](https://learn.microsoft.com/azure/cosmos-db/)
 - [Microsoft Foundry](https://learn.microsoft.com/azure/ai-foundry/)
-- [Azure Cognitive Search](https://learn.microsoft.com/azure/search/)
+- [Azure AI Search](https://learn.microsoft.com/azure/search/)
 - [Tire Manufacturing Process](https://en.wikipedia.org/wiki/Tire_manufacturing)
 - [Predictive Maintenance Patterns](https://learn.microsoft.com/azure/architecture/data-guide/scenarios/predictive-maintenance)
 
 ---
+
+**Next step:** [Challenge 1](../challenge-1/challenge-1.md) - Building Agent Framework Agents for Anomaly Classification and Fault Diagnosis
