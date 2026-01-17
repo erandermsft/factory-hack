@@ -23,7 +23,7 @@ By participating in this hackathon, you will learn how to:
 This hackathon uses a fictitious tire manufacturing company as an example, but the scenario is applicable to most manufacturing environments where machines are involved in production.
 
 The image below illustrates the conceptual scenario.
-![Manufacturing scenario](./images/manufacturing-scenario.png)
+![Manufacturing scenario](./images/maintenance-scenario.png)
 
 1. The factory operates a production line made up of multiple specialized machines, each responsible for a distinct step in tire manufacturing (e.g., mixing, extrusion, curing, inspection).
 2. A key business metric is **Overall Equipment Effectiveness (OEE)**—how effectively equipment is utilized during planned production time. Unplanned downtime and quality losses directly reduce throughput and profitability.
@@ -44,7 +44,7 @@ Agents can help by coordinating data, decisions, and handoffs across these steps
 
 The image below shows the agent roles used in this hackathon and how they interact with telemetry and existing factory systems.
 
-![Agentic factory orchestration](./images/agentic-factory-orchestration.png)
+![Agentic factory orchestration](./images/agentic-maintenance-orchestration.png)
 
 1. Telemetry is emitted from machine sensors and evaluated for deviations (for example, simple thresholds or an anomaly detection model).
 2. The **Anomaly Classification Agent** classifies the situation (e.g., normal/warning/critical), enriches it with machine context, and raises an alert with an appropriate priority.
@@ -61,7 +61,7 @@ In this hackathon you’ll build multiple agent applications (Python and .NET) a
 
 The image below illustrates the reference architecture used throughout the hackathon.
 
-![Factory Hackathon Architecture](./images/factory-hackathon-architecture.png)
+![Factory Hackathon Architecture](./images/hackathon-architecture.png)
 
 1. The documentation, starter code, and sample assets are available in this GitHub repository. You will fork it to your own GitHub account and work from your fork.
 2. **GitHub Codespaces** will provide a containerized development environment with the required tools and extensions pre-installed, so everyone starts from a known baseline.
