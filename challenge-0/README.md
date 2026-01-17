@@ -1,8 +1,8 @@
 # Challenge 0: Environment Setup
 
-Welcome to your very first challenge! In this challenge we will set the foundation to conduct this hackathon. You will deploy the required resources in Azure, create your development environment and all the assets necessary for the subsequent challenges. By completing this challenge, you will set up the foundation for the rest of the hackathon.
+Welcome to your very first challenge! In this challenge, we’ll set the foundation for the hackathon. You’ll deploy the required Azure resources, set up your development environment, and prepare the assets needed for the next challenges. By the end, you’ll have everything ready for the rest of the hackathon.
 
-If something is not working correctly, please do let your coach know!
+If something isn’t working as expected, please let your coach know.
 
 **Expected duration**: 45-60 min
 **Prerequisites**:
@@ -23,20 +23,20 @@ The goals for this challenge are
 
 A number of different Azure Resources are used as part of this hackathon.
 
-The following image illustrates the setup
+The following image illustrates the setup:
 ![Azure Resources](./images/azure-resources.png)
 
-All resources resides in one Resource Group.
+All resources reside in a single resource group.
 
 - A **Foundry Account** with a **Foundry Project** with model deployments for **gpt-4.1**, **gpt-4o-mini** and **text-embedding-ada-002**
-- **API Management** with two API proxies that reads data from **Cosmos DB**
-- **Cosmos DB** with a database including data for machines, technicians, work orders etc
-- **Storage Account** with knowledge base wiki articles in markdown
+- **API Management** with two API proxies that read data from **Cosmos DB**
+- **Cosmos DB** with a database including data for machines, technicians, work orders, and more
+- **Storage Account** with knowledge base wiki articles in Markdown
 - **Application Insights** and **Log Analytics** for logging
 - **AI Search** to query data
 - **Container Registry** and **Container Apps Environment** for running containers
 
-Sample data is seed into different **Cosmos DB** containers that will be queried during the exercises.
+Sample data is seeded into different **Cosmos DB** containers that will be queried during the exercises.
 <details>
 <summary>Cosmos DB Data Model (7 Containers)</summary>
 
@@ -96,7 +96,7 @@ The seeded data includes **warning conditions** to test your agents:
 - 🔴 **Machine 001**: Temperature 179.2°C (⚠️ exceeds 178°C warning)
 - 🔴 **Machine 002**: Drum vibration 3.2 mm/s (⚠️ exceeds 3.0 mm/s)
 - 🔴 **Machine 003**: Throughput 640 kg/h (⚠️ below 650 kg/h minimum)
-- �� **Machine 004**: Radial force variation 105N (⚠️ exceeds 100N)
+- 🔴 **Machine 004**: Radial force variation 105N (⚠️ exceeds 100N)
 - 🔴 **Machine 005**: Multiple warnings (temp, power, vibration)
 
 </details>
@@ -150,7 +150,7 @@ Sample parts with low stock trigger reorder alerts.
 
 ### Task 1: Fork the repository
 
-Before you start, please fork this repository to your GitHub account by clicking the Fork button in the upper right corner of the repository's main screen (or follow the documentation). This will allow you to make changes to the repository and save your progress.
+Before you start, please fork this repository to your GitHub account by clicking the Fork button in the upper right corner of the repository's main screen (or follow the [documentation](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo#forking-a-repository)). This will allow you to make changes to the repository and save your progress.
 
 ---
 
@@ -165,13 +165,13 @@ To open GitHub Codespaces, click on the button below:
 Please select your forked repository from the dropdown and, if necessary, adjust other settings of GitHub Codespace.
 
 > [!NOTE]
-> If GitHub Codespaces is not enabled in your organization, you can enable it by following the instructions [here](https://docs.github.com/en/codespaces/managing-codespaces-for-your-organization/enabling-or-disabling-github-codespaces-for-your-organization), or, if you cannot change your GitHub organization's settings, create a free personal GitHub account [here](https://github.com/signup?ref_cta=Sign+up&ref_loc=header+logged+out&ref_page=%2F&source=header-home). The Github Free Plan includes 120 core hours per month, equivalent to 60 hours on a 2-core machine, along with 15 GB of storage.
+> If GitHub Codespaces is not enabled in your organization, see [enabling or disabling Codespaces for your organization](https://docs.github.com/en/codespaces/managing-codespaces-for-your-organization/enabling-or-disabling-github-codespaces-for-your-organization). If you can’t change your organization’s settings, you can also [create a free personal GitHub account](https://github.com/signup?ref_cta=Sign+up&ref_loc=header+logged+out&ref_page=%2F&source=header-home). The GitHub Free plan includes 120 core hours per month, equivalent to 60 hours on a 2-core machine, along with 15 GB of storage.
 
 ---
 
-### Task 3: Login to Azure
+### Task 3: Log in to Azure
 
-Before anything else, let's log in into the CLI with our account. Please paste the code underneath and follow the necessary instructions.
+Before anything else, let’s log in to the Azure CLI. Paste the command below and follow the prompts.
 
 ```bash
 az login --use-device-code
@@ -181,14 +181,14 @@ az login --use-device-code
 
 ### Task 4: Deploy Resources
 
-In this step you create the resources that will be used throughout the day.
+In this step, you create the resources that will be used throughout the day.
 
 > [!NOTE]
-> Depending on the setup for the hackathon the Azure resources might already have been provisioned for you and you can then skip this step.
+> Depending on the setup for the hackathon, the Azure resources might already have been provisioned for you and you can then skip this step.
 > Check with your hackathon coach what is applicable for you.
 
 ```bash
-# Ensure you are located in challenge-0 directory 
+# Ensure you are located in the challenge-0 directory
 cd challenge-0
 
 # Make resource group name easy to identify. Use your initials or other identifier (e.g., "jd" for John Doe)
@@ -212,7 +212,7 @@ az deployment group create \
 
 ### Task 5: Verify the creation of your resources
 
-Go to your [`Azure Portal`](https://portal.azure.com/) and find your Resource Group hat should by now contain some resources and look like this:
+Go to the [Azure Portal](https://portal.azure.com/) and find your resource group, which should now contain resources like this:
 
 ![Azure Portal Resources](./images/azure-portal-resources.png)
 
@@ -224,7 +224,7 @@ After deploying resources, configure environment variables in the `.env` file. E
 
 > [!IMPORTANT]
 > Wait until all Azure resources are successfully deployed before starting this task.
-> Otherwise the environmment variables cannot be extracted correctly.
+> Otherwise, the environment variables may not be extracted correctly.
 
 ```bash
 # Extract connection keys
@@ -243,18 +243,17 @@ export $(cat ../.env | xargs)
 > You need to re-export the environment variables each time you open a new shell or when you resume a stopped Codespace.
 
 > [!CAUTION]
-> For convenience we will use key-based authentication and public network access to resources in the hack. In real world implementations you should consider stronger authentication mechanisms and additional network security.
+> For convenience, we use key-based authentication and public network access to resources in this hackathon. In real-world implementations, you should consider stronger authentication mechanisms and additional network security.
 > Never commit the .env file to the repository. This repo already includes `.env` in [.gitignore](../.gitignore), but if you rename the file you may need to add the new name to [.gitignore](../.gitignore) as well.
 
 ---
 
 ### Task 7: Assign additional permissions
 
-To perform certain tasks in the hackathon you need additional permissions, more specifically the `Azure AI Developer` role on the Foundry project resource
+To perform certain tasks in the hackathon, you need additional permissions—specifically the `Azure AI Developer` role on the Foundry project resource.
 
 ```bash
-
-# Get your Entra ID (AAD) user object id
+# Get your Entra ID (AAD) user object ID
 ME_OBJECT_ID="$(az ad signed-in-user show --query id -o tsv)"
 
 # Assign "Azure AI Developer" at the AI Foundry Project resource scope
@@ -269,10 +268,10 @@ az login --use-device-code
 ```
 
 ### Task 8: Seed Factory Sample Data
-As mentioned in [Context and background information](#-context-and-background-information) there are a lot of data sources that will be used in this Hackathon. Let's run a script to upload the data to **Cosmos DB**, **Storage Account** and create the needed APIs in **API Management** 
+
+As mentioned in [Context and background information](#-context-and-background-information), there are several data sources used throughout the hackathon. Run the script below to upload data to **Cosmos DB** and the **Storage Account**, and to create the required APIs in **API Management**.
 
 ```bash
-
 # Run data seeding script
 scripts/seed-data.sh
 ```
@@ -386,9 +385,9 @@ curl -X GET "$COSMOS_ENDPOINT" -H "Authorization: $COSMOS_KEY"
 
 ## 🧠 Conclusion and reflection
 
-🎉 Congratulations! Your sample tire factory environment is ready. 
+🎉 Congratulations! Your sample tire factory environment is ready.
 
-This forms the complete foundation for your multi-agent predictive maintenance hackathon system
+This forms the foundation for your multi-agent predictive maintenance hackathon system.
 
 Time to build some intelligent agents!
 
@@ -400,8 +399,9 @@ Time to build some intelligent agents!
 > - Azure Key Vault for secrets management
 > - RBAC for fine-grained access control
 
-If you want to expand your knowledge on what we have covered in this challenge, have a look at the content below:
+If you want to learn more about what you covered in this challenge, check out the links below:
 
+- [Get started with Azure CLI](https://learn.microsoft.com/en-us/cli/azure/get-started-with-azure-cli?view=azure-cli-latest)
 - [Azure Cosmos DB Documentation](https://learn.microsoft.com/azure/cosmos-db/)
 - [Microsoft Foundry](https://learn.microsoft.com/azure/ai-foundry/)
 - [Azure AI Search](https://learn.microsoft.com/azure/search/)
@@ -410,4 +410,4 @@ If you want to expand your knowledge on what we have covered in this challenge, 
 
 ---
 
-**Next step:** [Challenge 1](../challenge-1/challenge-1.md) - Building Agent Framework Agents for Anomaly Classification and Fault Diagnosis
+**Next step:** [Challenge 1](../challenge-1/README.md) - Building Agent Framework Agents for Anomaly Classification and Fault Diagnosis
