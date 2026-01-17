@@ -209,21 +209,24 @@ function App() {
         buffer += decoder.decode(value, { stream: true })
 
         // Process complete SSE events from the buffer
+        // SSE messages end with double newline, incomplete data stays in buffer
         const lines = buffer.split('\n')
-        buffer = '' // Reset buffer, we'll add back incomplete lines
+        
+        // Keep the last line in buffer if it's incomplete (no trailing newline)
+        // A complete buffer would end with '\n' after split, meaning last element is ''
+        const lastLine = lines[lines.length - 1]
+        if (lastLine !== '') {
+          // Incomplete line - save it for next iteration
+          buffer = lastLine
+          lines.pop()
+        } else {
+          buffer = ''
+        }
 
         let currentEvent = ''
         let currentData = ''
 
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i]
-
-          // Check if this is an incomplete line (last line with no newline)
-          if (i === lines.length - 1 && !buffer.endsWith('\n')) {
-            buffer = line
-            continue
-          }
-
+        for (const line of lines) {
           if (line.startsWith('event:')) {
             currentEvent = line.slice(6).trim()
           } else if (line.startsWith('data:')) {
@@ -328,10 +331,8 @@ function App() {
                 }
                 
                 case 'done': {
-                  // Stream complete
-                  if (runState !== 'completed') {
-                    setRunState('completed')
-                  }
+                  // Stream complete - mark workflow as done
+                  setRunState('completed')
                   setActiveAgentId(null)
                   break
                 }
@@ -347,10 +348,8 @@ function App() {
         }
       }
 
-      // Ensure we mark as completed
-      if (runState !== 'completed') {
-        setRunState('completed')
-      }
+      // Ensure we mark as completed when stream ends
+      setRunState('completed')
     } catch (err) {
       setApiError(err instanceof Error ? err.message : 'Request failed')
       setRunState('idle')

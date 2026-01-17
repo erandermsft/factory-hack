@@ -490,6 +490,8 @@ static async Task AnalyzeMachineStream(
                         }, jsonOptions);
                     }
                 }
+                // MEAI001: McpServerToolCallContent and McpServerToolResultContent are evaluation-only APIs.
+                // Suppressing to allow MCP tool call/result tracking in streaming workflow events.
 #pragma warning disable MEAI001
                 else if (e.Update.Contents.OfType<Microsoft.Extensions.AI.McpServerToolCallContent>().FirstOrDefault() is McpServerToolCallContent mcpCall)
                 {
@@ -551,7 +553,9 @@ static async Task AnalyzeMachineStream(
                 }
 
                 string? finalMessage = null;
-                foreach (var msg in evt.Data as List<Microsoft.Extensions.AI.ChatMessage> ?? new List<Microsoft.Extensions.AI.ChatMessage>())
+                var messages = evt.Data as List<Microsoft.Extensions.AI.ChatMessage> 
+                    ?? new List<Microsoft.Extensions.AI.ChatMessage>();
+                foreach (var msg in messages)
                 {
                     if (msg.Role == ChatRole.Assistant)
                     {
