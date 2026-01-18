@@ -26,6 +26,7 @@ using A2A;
 
 using FactoryWorkflow.RepairPlanner;
 using FactoryWorkflow.RepairPlanner.Services;
+using FactoryWorkflow;
 
 DotNetEnv.Env.TraversePath().Load();
 
@@ -220,95 +221,56 @@ static async Task<IResult> AnalyzeMachine(
 
         Console.WriteLine($"Total agents in workflow: {agents.Count} - [{string.Join(", ", agents.Select(a => a.Name))}]");
 
-        // WORKAROUND: AgentWorkflowBuilder.BuildSequential has MCP tool deserialization bug
-        // when passing conversation history between agents. We manually orchestrate sequential
-        // execution, passing only TEXT output (not full ChatMessage with MCP tool info).
-        var workflowResult = new WorkflowResponse();
-        var currentInput = telemetryJson;
-        
-        foreach (var agent in agents)
+        // Create custom executors that only pass TEXT between agents (strips MCP tool history)
+        // This works around the Azure.AI.Projects SDK bug where MCP tool call history
+        // causes deserialization errors in subsequent agents
+        var executors = agents.Select(a => new TextOnlyAgentExecutor(a)).ToList();
+
+        Console.WriteLine($"Building workflow with WorkflowBuilder using {executors.Count} TextOnlyAgentExecutors...");
+
+        // Clear previous results before running
+        TextOnlyAgentExecutor.ClearResults();
+
+        // Build the workflow using WorkflowBuilder - chain executors sequentially
+        // Each executor is Executor<string, string> so outputs chain directly to inputs
+        var workflowBuilder = new WorkflowBuilder(executors[0]);
+        for (int i = 1; i < executors.Count; i++)
         {
-            Console.WriteLine($"Running agent: {agent.Name} with input: {currentInput.Substring(0, Math.Min(200, currentInput.Length))}...");
-            var agentStep = new AgentStepResult { AgentName = agent.Name };
-            
-            try
-            {
-                // Create fresh conversation with only the current input (TEXT only - no MCP history)
-                var messages = new List<ChatMessage> { new ChatMessage(ChatRole.User, currentInput) };
-                
-                // Run the agent
-                var response = await agent.RunAsync(messages, null);
-                
-                // Extract text output and tool calls from response
-                string? outputText = null;
-                if (response.Messages != null)
-                {
-                    foreach (var msg in response.Messages)
-                    {
-                        // Capture tool calls from assistant messages
-                        if (msg.Role == ChatRole.Assistant)
-                        {
-                            foreach (var content in msg.Contents)
-                            {
-                                if (content is TextContent tc && !string.IsNullOrWhiteSpace(tc.Text))
-                                {
-                                    outputText = tc.Text;
-                                    agentStep.TextOutput += tc.Text;
-                                }
-                                else if (content is FunctionCallContent fcc)
-                                {
-                                    agentStep.ToolCalls.Add(new ToolCallInfo
-                                    {
-                                        ToolName = fcc.Name,
-                                        CallId = fcc.CallId,
-                                        Arguments = fcc.Arguments?.ToString()
-                                    });
-                                    Console.WriteLine($"  Tool call: {fcc.Name}({fcc.Arguments})");
-                                }
-                            }
-                        }
-                        // Capture tool results
-                        else if (msg.Role == ChatRole.Tool)
-                        {
-                            foreach (var content in msg.Contents)
-                            {
-                                if (content is FunctionResultContent frc)
-                                {
-                                    // Find matching tool call by CallId and add result
-                                    var matchingCall = agentStep.ToolCalls.LastOrDefault(t => t.CallId == frc.CallId);
-                                    if (matchingCall != null)
-                                    {
-                                        matchingCall.Result = frc.Result?.ToString()?.Substring(0, Math.Min(500, frc.Result?.ToString()?.Length ?? 0));
-                                    }
-                                    Console.WriteLine($"  Tool result: {frc.CallId} -> {frc.Result?.ToString()?.Substring(0, Math.Min(100, frc.Result?.ToString()?.Length ?? 0))}...");
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                agentStep.FinalMessage = outputText;
-                Console.WriteLine($"Agent {agent.Name} completed with {agentStep.ToolCalls.Count} tool calls. Output: {outputText?.Substring(0, Math.Min(200, outputText?.Length ?? 0))}...");
-                
-                // Pass output to next agent as input (TEXT only - avoids MCP deserialization bug)
-                if (!string.IsNullOrEmpty(outputText))
-                {
-                    currentInput = outputText;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Agent {agent.Name} failed: {ex.Message}");
-                Console.WriteLine($"  Stack trace: {ex.StackTrace}");
-                agentStep.FinalMessage = $"Error: {ex.Message}";
-                agentStep.TextOutput = $"Error: {ex.Message}\n\nInput was: {currentInput.Substring(0, Math.Min(500, currentInput.Length))}...";
-            }
-            
-            workflowResult.AgentSteps.Add(agentStep);
+            var prevExecutor = executors[i - 1];
+            var currExecutor = executors[i];
+            // Bind next executor and add edge: prev output (string) -> curr input (string)
+            workflowBuilder.BindExecutor(currExecutor);
+            workflowBuilder.AddEdge(prevExecutor, currExecutor);
         }
-        
-        // Set final message from last agent
-        workflowResult.FinalMessage = workflowResult.AgentSteps.LastOrDefault()?.FinalMessage;
+        // Register last executor as output source (so we get the final result)
+        workflowBuilder.WithOutputFrom(executors[^1]);
+        var workflow = workflowBuilder.Build();
+        Console.WriteLine("Workflow built successfully.");
+
+        // Run the workflow using the InProcessExecution environment
+        Console.WriteLine($"Starting workflow with input: {telemetryJson.Substring(0, Math.Min(100, telemetryJson.Length))}...");
+        var run = await InProcessExecution.Default.RunAsync<string>(workflow, telemetryJson);
+
+        // Get workflow final output from events
+        string? finalOutput = null;
+        foreach (var evt in run.OutgoingEvents)
+        {
+            Console.WriteLine($"Workflow event: {evt.GetType().Name}");
+            if (evt is WorkflowOutputEvent outputEvent && outputEvent.Is<string>(out var text))
+            {
+                finalOutput = text;
+                Console.WriteLine($"Workflow final output received: {text?.Substring(0, Math.Min(200, text?.Length ?? 0))}...");
+            }
+        }
+
+        // Collect step results from the static collector
+        var workflowResult = new WorkflowResponse
+        {
+            AgentSteps = TextOnlyAgentExecutor.StepResults.ToList(),
+            FinalMessage = finalOutput ?? TextOnlyAgentExecutor.StepResults.LastOrDefault()?.FinalMessage
+        };
+
+        Console.WriteLine($"Workflow completed with {workflowResult.AgentSteps.Count} agent steps.");
 
         return Results.Ok(workflowResult);
     }
@@ -390,15 +352,4 @@ public class AgentStepResult
     public List<ToolCallInfo> ToolCalls { get; set; } = new();
     public string TextOutput { get; set; } = string.Empty;
     public string? FinalMessage { get; set; }
-}
-
-/// <summary>
-/// Represents a tool/function call made by an agent
-/// </summary>
-public class ToolCallInfo
-{
-    public string ToolName { get; set; } = string.Empty;
-    public string? CallId { get; set; }
-    public string? Arguments { get; set; }
-    public string? Result { get; set; }
 }
