@@ -315,6 +315,7 @@ WHERE ARRAY_CONTAINS(c.skills, "tire_curing_press")
 ```
 
 </details>
+
 ---
 
 ## 🛠️ Troubleshooting and FAQ
