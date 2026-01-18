@@ -57,10 +57,12 @@
                 "ms-windows-ai-studio.windows-ai-studio",
                 "mechatroner.rainbow-csv",
                 "kejun.markdown-alert",
-                "humao.rest-client"
+                "humao.rest-client",
+                "github.github-vscode-theme"
+
             ],
             "settings": {
-                "workbench.colorTheme": "Copilot Theme"
+                "workbench.colorTheme": "GitHub Dark Default"
             }
         }
     }
