@@ -228,7 +228,7 @@ After deploying resources, configure environment variables in the `.env` file. E
 
 ```bash
 # Extract connection keys
-scripts/get-keys.sh --resource-group $RESOURCE_GROUP
+./get-keys.sh --resource-group $RESOURCE_GROUP
 
 # Verify .env file
 cat ../.env
@@ -286,7 +286,7 @@ As mentioned in [Context and background information](#-context-and-background-in
 
 ```bash
 # Run data seeding script
-scripts/seed-data.sh
+./seed-data.sh
 ```
 
 ---
@@ -367,7 +367,7 @@ az cosmosdb sql container list \
   --database-name FactoryOpsDB
 
 # Re-run seed script (idempotent)
-bash challenge-0/scripts/seed-data.sh
+bash challenge-0/seed-data.sh
 ```
 
 </details>
@@ -376,7 +376,7 @@ bash challenge-0/scripts/seed-data.sh
 <summary>Problem: Permission denied on seed script</summary>
 
 ```bash
-chmod +x challenge-0/scripts/seed-data.sh
+chmod +x challenge-0/seed-data.sh
 ```
 
 </details>

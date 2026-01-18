@@ -2,7 +2,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CHALLENGE0_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+CHALLENGE0_DIR="$SCRIPT_DIR"
 REPO_ROOT_DIR="$(cd "$CHALLENGE0_DIR/.." && pwd)"
 
 cd "$CHALLENGE0_DIR"
@@ -16,7 +16,7 @@ if [ -f "$ENV_FILE" ]; then
     set +a
     echo "✅ Loaded environment variables from $ENV_FILE"
 else
-    echo "❌ .env file not found at $ENV_FILE. Please run scripts/get-keys.sh first."
+    echo "❌ .env file not found at $ENV_FILE. Please run challenge-0/get-keys.sh first."
     exit 1
 fi
 
@@ -255,7 +255,7 @@ if ! az account show >/dev/null 2>&1; then
         exit 0
 fi
 
-# Validate required env vars (they should come from repo-root .env via scripts/get-keys.sh)
+# Validate required env vars (they should come from repo-root .env via challenge-0/get-keys.sh)
 missing_vars=()
 for v in AZURE_SUBSCRIPTION_ID RESOURCE_GROUP APIM_NAME COSMOS_ENDPOINT; do
         if [ -z "${!v}" ]; then
@@ -264,7 +264,7 @@ for v in AZURE_SUBSCRIPTION_ID RESOURCE_GROUP APIM_NAME COSMOS_ENDPOINT; do
 done
 if [ ${#missing_vars[@]} -ne 0 ]; then
         echo "⚠️ APIM seeding skipped: missing env var(s): ${missing_vars[*]}"
-        echo "   Tip: run challenge-0/scripts/get-keys.sh to generate the repo-root .env"
+        echo "   Tip: run challenge-0/get-keys.sh to generate the repo-root .env"
         exit 0
 fi
 
