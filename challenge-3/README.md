@@ -398,8 +398,12 @@ python run-batch.py
 
 1. Go to <https://ai.azure.com>
 2. Select your project
-3. Go to **Tracing** (often under **Build**)
-4. Filter by agent name (e.g., `MaintenanceSchedulerAgent`, `PartsOrderingAgent`) and time range
+3. Selcte _Agents_ and then `MaintenanceSchedulerAgent` or `PartsOrderingAgent` 
+4. Go to _Monitor_ tab
+
+You should see someting similar to this
+![Monitor](./images/challenge-3-monitor-portal.png)
+
 
 ---
 
