@@ -1,10 +1,21 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import aspireLogo from '/Aspire.png'
 import './App.css'
 
 import { AlarmForm, type AnalyzeMachinePayload } from './components/AlarmForm'
 import { AgentIllustration, type AgentNode } from './components/AgentIllustration'
-import type { WorkflowResponse } from './types/workflow'
+import type { 
+  WorkflowResponse, 
+  AgentStepResult,
+  StreamingAgentStartedEvent,
+  StreamingAgentCompleteEvent,
+  StreamingToolCallEvent,
+  StreamingToolResultEvent,
+  StreamingTextTokenEvent,
+  StreamingWorkflowCompleteEvent,
+  StreamingErrorEvent
+} from './types/workflow'
+import { normalizeAgentName } from './types/workflow'
 
 // Sample workflow response for demo purposes
 const DEMO_WORKFLOW_RESPONSE: WorkflowResponse = {
@@ -103,9 +114,16 @@ const DEMO_WORKFLOW_RESPONSE: WorkflowResponse = {
 
 function App() {
   const apiBaseUrl = import.meta.env.VITE_API_URL as string | undefined
+  // Use streaming endpoint for real-time updates
+  const analyzeStreamUrl = apiBaseUrl
+    ? new URL('/api/analyze_machine_stream', apiBaseUrl).toString()
+    : '/api/analyze_machine_stream'
+  // Keep non-streaming URL as fallback
   const analyzeMachineUrl = apiBaseUrl
     ? new URL('/api/analyze_machine', apiBaseUrl).toString()
     : '/api/analyze_machine'
+  // Use streaming by default, can be toggled
+  const useStreaming = true
 
   const agents = useMemo<AgentNode[]>(
     () => [
@@ -140,11 +158,206 @@ function App() {
 
   const [submittedPayload, setSubmittedPayload] = useState<AnalyzeMachinePayload | null>(null)
   const [runState, setRunState] = useState<'idle' | 'running' | 'completed'>('idle')
-  const activeIndex: number | null = null
+  // Track active agent during streaming for UI feedback
+  const [activeAgentId, setActiveAgentId] = useState<string | null>(null)
   const [apiResponse, setApiResponse] = useState<WorkflowResponse | null>(null)
   const [apiError, setApiError] = useState<string | null>(null)
 
-  const callAnalyzeMachine = async (payload: AnalyzeMachinePayload) => {
+  // Streaming workflow call using Server-Sent Events
+  const callAnalyzeMachineStreaming = useCallback(async (payload: AnalyzeMachinePayload) => {
+    setSubmittedPayload(payload)
+    setRunState('running')
+    setApiResponse(null)
+    setApiError(null)
+    setActiveAgentId(null)
+
+    // Initialize an empty workflow response that we'll build up progressively
+    const workflowResponse: WorkflowResponse = {
+      agentSteps: [],
+      finalMessage: null
+    }
+    // Track current agent step being built
+    let currentAgentStep: AgentStepResult | null = null
+
+    try {
+      const response = await fetch(analyzeStreamUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Request failed with ${response.status}`)
+      }
+
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error('No response body reader available')
+      }
+
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      // Read the SSE stream
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+
+        // Process complete SSE events from the buffer
+        // SSE messages end with double newline, incomplete data stays in buffer
+        const lines = buffer.split('\n')
+        
+        // Keep the last line in buffer if it's incomplete (no trailing newline)
+        // A complete buffer would end with '\n' after split, meaning last element is ''
+        const lastLine = lines[lines.length - 1]
+        if (lastLine !== '') {
+          // Incomplete line - save it for next iteration
+          buffer = lastLine
+          lines.pop()
+        } else {
+          buffer = ''
+        }
+
+        let currentEvent = ''
+        let currentData = ''
+
+        for (const line of lines) {
+          if (line.startsWith('event:')) {
+            currentEvent = line.slice(6).trim()
+          } else if (line.startsWith('data:')) {
+            currentData = line.slice(5).trim()
+          } else if (line === '' && currentEvent && currentData) {
+            // Process the complete event
+            try {
+              const eventData = JSON.parse(currentData)
+              
+              switch (currentEvent) {
+                case 'agent_started': {
+                  const data = eventData as StreamingAgentStartedEvent
+                  // Create a new agent step
+                  currentAgentStep = {
+                    agentName: data.agentName,
+                    toolCalls: [],
+                    textOutput: '',
+                    finalMessage: null
+                  }
+                  // Update active agent for UI highlighting
+                  setActiveAgentId(normalizeAgentName(data.agentName))
+                  break
+                }
+                
+                case 'agent_complete': {
+                  const data = eventData as StreamingAgentCompleteEvent
+                  if (currentAgentStep) {
+                    // Update the current step with final data
+                    currentAgentStep.textOutput = data.textOutput || currentAgentStep.textOutput
+                    currentAgentStep.finalMessage = data.finalMessage
+                    currentAgentStep.toolCalls = data.toolCalls || currentAgentStep.toolCalls
+                    // Add to response
+                    workflowResponse.agentSteps.push({ ...currentAgentStep })
+                    // Update UI
+                    setApiResponse({ ...workflowResponse })
+                    currentAgentStep = null
+                  }
+                  break
+                }
+                
+                case 'tool_call': {
+                  const data = eventData as StreamingToolCallEvent
+                  if (currentAgentStep) {
+                    currentAgentStep.toolCalls.push({
+                      toolName: data.toolName,
+                      arguments: data.arguments,
+                      result: null
+                    })
+                    // Update UI to show tool call in progress
+                    setApiResponse({ 
+                      ...workflowResponse, 
+                      agentSteps: [...workflowResponse.agentSteps, { ...currentAgentStep }] 
+                    })
+                  }
+                  break
+                }
+                
+                case 'tool_result': {
+                  const data = eventData as StreamingToolResultEvent
+                  if (currentAgentStep) {
+                    // Find the matching tool call and update its result
+                    const toolCall = currentAgentStep.toolCalls.find(tc => tc.toolName === data.toolName && tc.result === null)
+                    if (toolCall) {
+                      toolCall.result = data.result
+                    }
+                    // Update UI
+                    setApiResponse({ 
+                      ...workflowResponse, 
+                      agentSteps: [...workflowResponse.agentSteps, { ...currentAgentStep }] 
+                    })
+                  }
+                  break
+                }
+                
+                case 'text_token': {
+                  const data = eventData as StreamingTextTokenEvent
+                  if (currentAgentStep) {
+                    currentAgentStep.textOutput += data.text
+                    // Update UI with streaming text (throttle updates if needed)
+                    setApiResponse({ 
+                      ...workflowResponse, 
+                      agentSteps: [...workflowResponse.agentSteps, { ...currentAgentStep }] 
+                    })
+                  }
+                  break
+                }
+                
+                case 'workflow_complete': {
+                  const data = eventData as StreamingWorkflowCompleteEvent
+                  workflowResponse.finalMessage = data.finalMessage
+                  setApiResponse({ ...workflowResponse })
+                  setRunState('completed')
+                  setActiveAgentId(null)
+                  break
+                }
+                
+                case 'error': {
+                  const data = eventData as StreamingErrorEvent
+                  setApiError(data.message)
+                  setRunState('idle')
+                  break
+                }
+                
+                case 'done': {
+                  // Stream complete - mark workflow as done
+                  setRunState('completed')
+                  setActiveAgentId(null)
+                  break
+                }
+              }
+            } catch (parseError) {
+              console.error('Failed to parse SSE event:', parseError, currentData)
+            }
+            
+            // Reset for next event
+            currentEvent = ''
+            currentData = ''
+          }
+        }
+      }
+
+      // Ensure we mark as completed when stream ends
+      setRunState('completed')
+    } catch (err) {
+      setApiError(err instanceof Error ? err.message : 'Request failed')
+      setRunState('idle')
+    }
+  }, [analyzeStreamUrl])
+
+  // Non-streaming fallback
+  const callAnalyzeMachineNonStreaming = useCallback(async (payload: AnalyzeMachinePayload) => {
     setSubmittedPayload(payload)
     setRunState('running')
     setApiResponse(null)
@@ -180,7 +393,10 @@ function App() {
       setApiError(err instanceof Error ? err.message : 'Request failed')
       setRunState('idle')
     }
-  }
+  }, [analyzeMachineUrl])
+
+  // Choose streaming or non-streaming based on config
+  const callAnalyzeMachine = useStreaming ? callAnalyzeMachineStreaming : callAnalyzeMachineNonStreaming
 
   const loadDemoData = () => {
     setSubmittedPayload({
@@ -261,7 +477,7 @@ function App() {
           <div className="card">
             <AgentIllustration 
               agents={agents} 
-              activeIndex={activeIndex} 
+              activeAgentId={activeAgentId} 
               runState={runState} 
               workflowResponse={apiResponse}
             />

@@ -21,6 +21,56 @@ export interface WorkflowResponse {
 }
 
 /**
+ * SSE Event types for streaming workflow updates
+ */
+export type StreamingEventType = 
+  | 'agent_started'
+  | 'agent_complete'
+  | 'tool_call'
+  | 'tool_result'
+  | 'text_token'
+  | 'workflow_complete'
+  | 'error'
+  | 'done'
+
+export interface StreamingAgentStartedEvent {
+  agentName: string
+}
+
+export interface StreamingAgentCompleteEvent {
+  agentName: string
+  status: string
+  toolCalls: ToolCallInfo[]
+  textOutput: string
+  finalMessage: string | null
+}
+
+export interface StreamingToolCallEvent {
+  agentName: string
+  toolName: string
+  arguments: string | null
+}
+
+export interface StreamingToolResultEvent {
+  agentName: string
+  toolName: string
+  result: string | null
+}
+
+export interface StreamingTextTokenEvent {
+  agentName: string
+  text: string
+}
+
+export interface StreamingWorkflowCompleteEvent {
+  finalMessage: string | null
+}
+
+export interface StreamingErrorEvent {
+  message: string
+}
+
+/**
  * Maps agent IDs from the API response to display-friendly agent identifiers
  */
 export function normalizeAgentName(rawName: string): string {
