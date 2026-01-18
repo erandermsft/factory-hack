@@ -255,6 +255,9 @@ To perform certain tasks in the hackathon, you need additional permissions:
 - `Azure AI Developer` on the **Foundry project** resource (agent/project operations)
 - `Cognitive Services OpenAI Contributor` on the **Azure OpenAI** resource (calling chat completions)
 
+> [!NOTE]
+> Role assignments can take **5–10 minutes** to fully propagate. If you still see `PermissionDenied` errors after assigning roles, wait a few minutes, then run `az login --use-device-code` again and re-export your environment variables.
+
 ```bash
 # Get your Entra ID (AAD) user object ID
 ME_OBJECT_ID="$(az ad signed-in-user show --query id -o tsv)"

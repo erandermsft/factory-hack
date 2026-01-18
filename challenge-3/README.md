@@ -443,15 +443,6 @@ You've learned how to:
 - **Handle multiple containers** - Work with complex data relationships
 - **Implement tracing & observability** - Monitor agent performance and model usage
 
-These agents demonstrate how AI can optimize factory operations by:
-
-- **Predictive scheduling**: Finding optimal maintenance windows using historical data
-- **Risk assessment**: Estimating failure probability and recommending actions
-- **Inventory management**: Checking stock and ordering needed parts
-- **Supplier optimization**: Selecting suppliers based on reliability, lead time, and cost
-- **Workflow automation**: Updating work order status as tasks complete
-- **Comprehensive monitoring**: Full visibility into agent execution and AI decisions
-
 If you want to expand your knowledge on what we’ve covered in this challenge, have a look at the content below:
 
 - [Azure AI Foundry Tracing Documentation](https://learn.microsoft.com/azure/ai-foundry/how-to/develop/trace-agents-sdk)
