@@ -1,7 +1,8 @@
 # Microsoft Agent Framework (requires --pre flag)
-agent-framework-azure-ai
-agent-framework-azure-ai-search
-azure-ai-projects
+agent-framework-azure-ai==1.0.0b260107
+agent-framework-azure-ai-search==1.0.0b260107
+agent-framework-core==1.0.0b260107
+azure-ai-projects==2.0.0b3
 
 # Azure dependencies
 azure-cosmos>=4.5.0
