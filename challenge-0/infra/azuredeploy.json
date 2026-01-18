@@ -337,7 +337,7 @@
         "category": "AppInsights",
         "target": "[resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))]",
         "useWorkspaceManagedIdentity": false,
-        "isSharedToAll": false,
+        "isSharedToAll": true,
         "credentials": {
           "key": "[reference(resourceId('Microsoft.Insights/components', variables('applicationInsightsName')), '2020-02-02').InstrumentationKey]"
         },

@@ -16,10 +16,9 @@ import sys
 from datetime import datetime
 from typing import List
 
-from agent_framework import ChatAgent
-from agent_framework_azure_ai import AzureAIAgentClient
+from agent_framework.azure import AzureAIClient
 from azure.ai.projects.aio import AIProjectClient
-from azure.identity.aio import DefaultAzureCredential
+from azure.identity.aio import AzureCliCredential, DefaultAzureCredential
 from dotenv import load_dotenv
 from services.cosmos_db_service import (
     CosmosDbService,
@@ -70,31 +69,31 @@ Analyze historical maintenance data and recommend optimal maintenance schedules 
 
 Always respond in valid JSON format as requested."""
 
-        credential = DefaultAzureCredential()
+        # Build full prompt including any chat history context
+        full_prompt = context
+        if chat_history_json:
+            try:
+                history_msgs = json.loads(chat_history_json)
+                history_context = "\n".join(
+                    [f"{msg['role']}: {msg['content']}" for msg in history_msgs[-5:]]
+                )
+                full_prompt = f"Previous conversation context:\n{history_context}\n\n{context}"
+            except Exception as e:
+                print(f"   Warning: Could not restore chat history: {e}")
 
-        async with ChatAgent(
-            chat_client=AzureAIAgentClient(
-                project_endpoint=self.project_endpoint,
-                model_deployment_name=self.deployment_name,
-                credential=credential,
-                agent_name=f"MaintenanceScheduler-{work_order.machine_id}",
-                should_cleanup_agent=False,  # Keep agent visible in portal
-            ),
-            instructions=instructions,
-        ) as agent:
-            thread = agent.get_new_thread()
+        # Use newer AzureAIClient pattern (matches anomaly_classification_agent.py)
+        async with AzureCliCredential() as credential:
+            async with AzureAIClient(credential=credential).create_agent(
+                name="MaintenanceSchedulerAgent",
+                description="Predictive maintenance scheduling agent for tire manufacturing",
+                instructions=instructions,
+            ) as agent:
+                print(f"   ✅ Using agent: {agent.id}")
+                result = await agent.run(full_prompt)
+                response_text = result.text
 
-            if chat_history_json:
-                try:
-                    for msg in json.loads(chat_history_json):
-                        await thread.add_message(role=msg["role"], content=msg["content"])
-                except Exception as e:
-                    print(f"   Warning: Could not restore chat history: {e}")
-
-            result = await agent.run(context, thread=thread)
-            response_text = result.text
-
-            await self._save_thread_history(work_order.machine_id, thread)
+                # Save interaction to chat history
+                await self._save_interaction_history(work_order.machine_id, context, response_text)
 
         json_response = self._extract_json(response_text)
         data = json.loads(json_response)
@@ -121,24 +120,22 @@ Always respond in valid JSON format as requested."""
             created_at=datetime.utcnow(),
         )
 
-    async def _save_thread_history(self, machine_id: str, thread):
-        """Save thread history to Cosmos DB"""
+    async def _save_interaction_history(self, machine_id: str, user_prompt: str, assistant_response: str):
+        """Save interaction to Cosmos DB chat history"""
 
         try:
-            messages = []
-            async for msg in thread.list_messages():
-                messages.append(
-                    {
-                        "role": msg.role,
-                        "content": msg.content[0].text
-                        if msg.content and hasattr(msg.content[0], "text")
-                        else str(msg.content),
-                    }
-                )
-                if len(messages) >= 10:
-                    break
+            # Get existing history
+            existing_json = await self.cosmos_service.get_machine_chat_history(machine_id)
+            messages = json.loads(existing_json) if existing_json else []
 
-            messages.reverse()
+            # Append new interaction
+            messages.append({"role": "user", "content": user_prompt})
+            messages.append(
+                {"role": "assistant", "content": assistant_response})
+
+            # Keep only last 10 messages
+            messages = messages[-10:]
+
             await self.cosmos_service.save_machine_chat_history(machine_id, json.dumps(messages))
         except Exception as e:
             print(f"   Warning: Could not save chat history: {e}")
@@ -284,11 +281,12 @@ async def main():
 
     print("=== Predictive Maintenance Agent ===\n")
 
-    # Load configuration
+    # Load configuration (use AZURE_AI_PROJECT_ENDPOINT for consistency with other challenge scripts)
     cosmos_endpoint = os.getenv("COSMOS_ENDPOINT")
     cosmos_key = os.getenv("COSMOS_KEY")
     database_name = os.getenv("COSMOS_DATABASE_NAME")
-    foundry_project_endpoint = os.getenv("AI_FOUNDRY_PROJECT_ENDPOINT")
+    foundry_project_endpoint = os.getenv(
+        "AZURE_AI_PROJECT_ENDPOINT") or os.getenv("AI_FOUNDRY_PROJECT_ENDPOINT")
     deployment_name = os.getenv("MODEL_DEPLOYMENT_NAME", "gpt-4.1")
     app_insights_connection = os.getenv(
         "APPLICATIONINSIGHTS_CONNECTION_STRING")
@@ -296,7 +294,7 @@ async def main():
     # Validate
     if not all([cosmos_endpoint, cosmos_key, database_name, foundry_project_endpoint]):
         print("Error: Missing required environment variables.")
-        print("Required: COSMOS_ENDPOINT, COSMOS_KEY, COSMOS_DATABASE_NAME, AI_FOUNDRY_PROJECT_ENDPOINT")
+        print("Required: COSMOS_ENDPOINT, COSMOS_KEY, COSMOS_DATABASE_NAME, AZURE_AI_PROJECT_ENDPOINT")
         return
 
     enable_tracing(app_insights_connection)

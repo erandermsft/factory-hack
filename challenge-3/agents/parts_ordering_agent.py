@@ -17,8 +17,7 @@ import uuid
 from datetime import datetime
 from typing import List
 
-from agent_framework import ChatAgent
-from agent_framework_azure_ai import AzureAIAgentClient
+from agent_framework.azure import AzureAIClient
 from azure.ai.projects.aio import AIProjectClient
 from azure.identity.aio import DefaultAzureCredential
 from dotenv import load_dotenv
@@ -72,31 +71,30 @@ Analyze inventory status and optimize parts ordering from suppliers considering:
 
 Always respond in valid JSON format as requested."""
 
+        # Build context with chat history if available
+        full_context = context
+        if chat_history_json:
+            try:
+                history_messages = json.loads(chat_history_json)
+                history_text = "\n".join(
+                    f"{msg['role']}: {msg['content']}" for msg in history_messages
+                )
+                full_context = f"Previous conversation:\n{history_text}\n\n{context}"
+            except Exception as e:
+                print(f"   Warning: Could not restore chat history: {e}")
+
         credential = DefaultAzureCredential()
 
-        async with ChatAgent(
-            chat_client=AzureAIAgentClient(
-                project_endpoint=self.project_endpoint,
-                model_deployment_name=self.deployment_name,
-                credential=credential,
-                agent_name=f"PartsOrdering-{work_order.id}",
-                should_cleanup_agent=False,  # Keep agent visible in portal
-            ),
+        async with AzureAIClient(credential).create_agent(
+            endpoint=self.project_endpoint,
+            model=self.deployment_name,
+            name="PartsOrderingAgent",
             instructions=instructions,
         ) as agent:
-            thread = agent.get_new_thread()
-
-            if chat_history_json:
-                try:
-                    for msg in json.loads(chat_history_json):
-                        await thread.add_message(role=msg["role"], content=msg["content"])
-                except Exception as e:
-                    print(f"   Warning: Could not restore chat history: {e}")
-
-            result = await agent.run(context, thread=thread)
+            result = await agent.run(full_context)
             response_text = result.text
 
-            await self._save_thread_history(work_order.id, thread)
+            await self._save_interaction_history(work_order.id, full_context, response_text)
 
         json_response = self._extract_json(response_text)
         data = json.loads(json_response)
@@ -123,24 +121,14 @@ Always respond in valid JSON format as requested."""
             created_at=datetime.utcnow(),
         )
 
-    async def _save_thread_history(self, work_order_id: str, thread):
-        """Save thread history to Cosmos DB"""
+    async def _save_interaction_history(self, work_order_id: str, user_context: str, assistant_response: str):
+        """Save interaction history to Cosmos DB"""
 
         try:
-            messages = []
-            async for msg in thread.list_messages():
-                messages.append(
-                    {
-                        "role": msg.role,
-                        "content": msg.content[0].text
-                        if msg.content and hasattr(msg.content[0], "text")
-                        else str(msg.content),
-                    }
-                )
-                if len(messages) >= 10:
-                    break
-
-            messages.reverse()
+            messages = [
+                {"role": "user", "content": user_context},
+                {"role": "assistant", "content": assistant_response},
+            ]
             await self.cosmos_service.save_work_order_chat_history(work_order_id, json.dumps(messages))
         except Exception as e:
             print(f"   Warning: Could not save chat history: {e}")
@@ -264,14 +252,15 @@ async def main():
     cosmos_endpoint = os.getenv("COSMOS_ENDPOINT")
     cosmos_key = os.getenv("COSMOS_KEY")
     database_name = os.getenv("COSMOS_DATABASE_NAME")
-    foundry_project_endpoint = os.getenv("AI_FOUNDRY_PROJECT_ENDPOINT")
+    foundry_project_endpoint = os.getenv(
+        "AZURE_AI_PROJECT_ENDPOINT") or os.getenv("AI_FOUNDRY_PROJECT_ENDPOINT")
     deployment_name = os.getenv("MODEL_DEPLOYMENT_NAME", "gpt-4o")
     app_insights_connection = os.getenv(
         "APPLICATIONINSIGHTS_CONNECTION_STRING")
 
     if not all([cosmos_endpoint, cosmos_key, database_name, foundry_project_endpoint]):
         print("Error: Missing required environment variables.")
-        print("Required: COSMOS_ENDPOINT, COSMOS_KEY, COSMOS_DATABASE_NAME, AI_FOUNDRY_PROJECT_ENDPOINT")
+        print("Required: COSMOS_ENDPOINT, COSMOS_KEY, COSMOS_DATABASE_NAME, AZURE_AI_PROJECT_ENDPOINT")
         return
 
     enable_tracing(app_insights_connection)

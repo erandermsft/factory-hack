@@ -398,8 +398,12 @@ python run-batch.py
 
 1. Go to <https://ai.azure.com>
 2. Select your project
-3. Go to **Tracing** (often under **Build**)
-4. Filter by agent name (e.g., `MaintenanceSchedulerAgent`, `PartsOrderingAgent`) and time range
+3. Selcte _Agents_ and then `MaintenanceSchedulerAgent` or `PartsOrderingAgent` 
+4. Go to _Monitor_ tab
+
+You should see someting similar to this
+![Monitor](./images/challenge-3-monitor-portal.png)
+
 
 ---
 
@@ -442,15 +446,6 @@ You've learned how to:
 - **Build data-driven agents** - Combine database queries with AI analysis
 - **Handle multiple containers** - Work with complex data relationships
 - **Implement tracing & observability** - Monitor agent performance and model usage
-
-These agents demonstrate how AI can optimize factory operations by:
-
-- **Predictive scheduling**: Finding optimal maintenance windows using historical data
-- **Risk assessment**: Estimating failure probability and recommending actions
-- **Inventory management**: Checking stock and ordering needed parts
-- **Supplier optimization**: Selecting suppliers based on reliability, lead time, and cost
-- **Workflow automation**: Updating work order status as tasks complete
-- **Comprehensive monitoring**: Full visibility into agent execution and AI decisions
 
 If you want to expand your knowledge on what we’ve covered in this challenge, have a look at the content below:
 
