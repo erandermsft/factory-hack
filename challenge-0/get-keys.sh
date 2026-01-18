@@ -1,4 +1,7 @@
 #!/bin/bash
+# Resolve paths relative to this script (so it works no matter where you run it from)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENV_OUT="$SCRIPT_DIR/../.env"
 #
 # This script will retrieve necessary keys and properties from Azure Resources 
 # deployed using "Deploy to Azure" button and will store them in a file named
@@ -293,8 +296,8 @@ fi
 # Note: AI Foundry Project Endpoint construction is handled later in the script
 
 # Overwrite the existing .env file
-if [ -f ../.env ]; then
-    rm ../.env
+if [ -f "$ENV_OUT" ]; then
+    rm "$ENV_OUT"
 fi
 
 # Store the keys and properties in a file
@@ -304,46 +307,46 @@ echo "Storing the keys and properties in '.env' file..."
 subscriptionId=$(az account show --query id -o tsv 2>/dev/null || echo "")
 
 # Azure resource group and subscription
-echo "RESOURCE_GROUP=\"$resourceGroupName\"" >> ../.env
-echo "AZURE_SUBSCRIPTION_ID=\"$subscriptionId\"" >> ../.env
+echo "RESOURCE_GROUP=\"$resourceGroupName\"" >> "$ENV_OUT"
+echo "AZURE_SUBSCRIPTION_ID=\"$subscriptionId\"" >> "$ENV_OUT"
 
 # Azure Storage (with both naming conventions)
-echo "AZURE_STORAGE_ACCOUNT_NAME=\"$storageAccountName\"" >> ../.env
-echo "AZURE_STORAGE_ACCOUNT_KEY=\"$storageAccountKey\"" >> ../.env
-echo "AZURE_STORAGE_CONNECTION_STRING=\"$storageAccountConnectionString\"" >> ../.env
+echo "AZURE_STORAGE_ACCOUNT_NAME=\"$storageAccountName\"" >> "$ENV_OUT"
+echo "AZURE_STORAGE_ACCOUNT_KEY=\"$storageAccountKey\"" >> "$ENV_OUT"
+echo "AZURE_STORAGE_CONNECTION_STRING=\"$storageAccountConnectionString\"" >> "$ENV_OUT"
 
 # Other Azure services
-echo "LOG_ANALYTICS_WORKSPACE_NAME=\"$logAnalyticsWorkspaceName\"" >> ../.env
-echo "LOG_ANALYTICS_WORKSPACE_ID=\"$logAnalyticsWorkspaceId\"" >> ../.env
-echo "SEARCH_SERVICE_NAME=\"$searchServiceName\"" >> ../.env
-echo "SEARCH_SERVICE_ENDPOINT=\"$searchServiceEndpoint\"" >> ../.env
-echo "SEARCH_ADMIN_KEY=\"$searchServiceKey\"" >> ../.env
+echo "LOG_ANALYTICS_WORKSPACE_NAME=\"$logAnalyticsWorkspaceName\"" >> "$ENV_OUT"
+echo "LOG_ANALYTICS_WORKSPACE_ID=\"$logAnalyticsWorkspaceId\"" >> "$ENV_OUT"
+echo "SEARCH_SERVICE_NAME=\"$searchServiceName\"" >> "$ENV_OUT"
+echo "SEARCH_SERVICE_ENDPOINT=\"$searchServiceEndpoint\"" >> "$ENV_OUT"
+echo "SEARCH_ADMIN_KEY=\"$searchServiceKey\"" >> "$ENV_OUT"
 
 # Azure Search variables for document processor compatibility
-echo "AZURE_SEARCH_ENDPOINT=\"$searchServiceEndpoint\"" >> ../.env
-echo "AZURE_SEARCH_API_KEY=\"$searchServiceKey\"" >> ../.env
+echo "AZURE_SEARCH_ENDPOINT=\"$searchServiceEndpoint\"" >> "$ENV_OUT"
+echo "AZURE_SEARCH_API_KEY=\"$searchServiceKey\"" >> "$ENV_OUT"
 
-echo "AI_FOUNDRY_HUB_NAME=\"$aiFoundryHubName\"" >> ../.env
-echo "AI_FOUNDRY_PROJECT_NAME=\"$aiFoundryProjectName\"" >> ../.env
-echo "AI_FOUNDRY_ENDPOINT=\"$aiFoundryEndpoint\"" >> ../.env
-echo "AI_FOUNDRY_KEY=\"$aiFoundryKey\"" >> ../.env
+echo "AI_FOUNDRY_HUB_NAME=\"$aiFoundryHubName\"" >> "$ENV_OUT"
+echo "AI_FOUNDRY_PROJECT_NAME=\"$aiFoundryProjectName\"" >> "$ENV_OUT"
+echo "AI_FOUNDRY_ENDPOINT=\"$aiFoundryEndpoint\"" >> "$ENV_OUT"
+echo "AI_FOUNDRY_KEY=\"$aiFoundryKey\"" >> "$ENV_OUT"
 
 # RepairPlannerAgent (Challenge 2) environment variables
 # For chat, use the same key as the AI Foundry/Cognitive Services account.
-echo "AZURE_AI_CHAT_KEY=\"$aiFoundryKey\"" >> ../.env
+echo "AZURE_AI_CHAT_KEY=\"$aiFoundryKey\"" >> "$ENV_OUT"
 
 # Chat endpoint is derived from the Cognitive Services endpoint.
 # Expected final format:
 #   https://<resource>.cognitiveservices.azure.com/openai/deployments/gpt-4o-mini
 if [ -n "$aiFoundryEndpoint" ]; then
     aiChatBaseEndpoint=${aiFoundryEndpoint%/}
-    echo "AZURE_AI_CHAT_ENDPOINT=\"${aiChatBaseEndpoint}/openai/deployments/gpt-4o-mini\"" >> ../.env
+    echo "AZURE_AI_CHAT_ENDPOINT=\"${aiChatBaseEndpoint}/openai/deployments/gpt-4o-mini\"" >> "$ENV_OUT"
 else
-    echo "AZURE_AI_CHAT_ENDPOINT=\"\"" >> ../.env
+    echo "AZURE_AI_CHAT_ENDPOINT=\"\"" >> "$ENV_OUT"
 fi
 
 # Constant for the workshop (placed after the endpoint for readability)
-echo "AZURE_AI_CHAT_MODEL_DEPLOYMENT_NAME=\"gpt-4o-mini\"" >> ../.env
+echo "AZURE_AI_CHAT_MODEL_DEPLOYMENT_NAME=\"gpt-4o-mini\"" >> "$ENV_OUT"
 # Construct AI Foundry Hub Endpoint if missing
 if [ -z "$aiFoundryHubEndpoint" ] && [ -n "$aiFoundryHubName" ]; then
     echo "Constructing AI Foundry Hub Endpoint..."
@@ -353,7 +356,7 @@ if [ -z "$aiFoundryHubEndpoint" ] && [ -n "$aiFoundryHubName" ]; then
         echo "Constructed hub endpoint: $aiFoundryHubEndpoint"
     fi
 fi
-echo "AI_FOUNDRY_HUB_ENDPOINT=\"$aiFoundryHubEndpoint\"" >> ../.env
+echo "AI_FOUNDRY_HUB_ENDPOINT=\"$aiFoundryHubEndpoint\"" >> "$ENV_OUT"
 
 # Construct AI Foundry Project Endpoint if not found in deployment outputs
 if [ -z "$aiFoundryProjectEndpoint" ] && [ -n "$aiFoundryHubName" ]; then
@@ -398,47 +401,47 @@ elif [ -n "$aiFoundryProjectEndpoint" ] && [[ "$aiFoundryProjectEndpoint" == *"a
         echo "Converted to API endpoint: $aiFoundryProjectEndpoint"
     fi
 fi
-echo "AI_FOUNDRY_PROJECT_ENDPOINT=\"$aiFoundryProjectEndpoint\"" >> ../.env
-echo "AZURE_AI_PROJECT_ENDPOINT=\"$aiFoundryProjectEndpoint\"" >> ../.env
-echo "AZURE_AI_PROJECT_RESOURCE_ID=\"$azureAIProjectResourceId\"" >> ../.env
-echo "AZURE_AI_CONNECTION_ID=\"$azureAIConnectionId\"" >> ../.env
-echo "AZURE_AI_MODEL_DEPLOYMENT_NAME=\"gpt-4.1\"" >> ../.env
-echo "EMBEDDING_MODEL_DEPLOYMENT_NAME=\"text-embedding-ada-002\"" >> ../.env
+echo "AI_FOUNDRY_PROJECT_ENDPOINT=\"$aiFoundryProjectEndpoint\"" >> "$ENV_OUT"
+echo "AZURE_AI_PROJECT_ENDPOINT=\"$aiFoundryProjectEndpoint\"" >> "$ENV_OUT"
+echo "AZURE_AI_PROJECT_RESOURCE_ID=\"$azureAIProjectResourceId\"" >> "$ENV_OUT"
+echo "AZURE_AI_CONNECTION_ID=\"$azureAIConnectionId\"" >> "$ENV_OUT"
+echo "AZURE_AI_MODEL_DEPLOYMENT_NAME=\"gpt-4.1\"" >> "$ENV_OUT"
+echo "EMBEDDING_MODEL_DEPLOYMENT_NAME=\"text-embedding-ada-002\"" >> "$ENV_OUT"
 # Azure Cosmos DB
-echo "COSMOS_NAME=\"$cosmosDbAccountName\"" >> ../.env
-echo "COSMOS_DATABASE_NAME=\"FactoryOpsDB\"" >> ../.env
-echo "COSMOS_ENDPOINT=\"$cosmosDbEndpoint\"" >> ../.env
-echo "COSMOS_KEY=\"$cosmosDbKey\"" >> ../.env
-echo "COSMOS_CONNECTION_STRING=\"$cosmosDbConnectionString\"" >> ../.env
+echo "COSMOS_NAME=\"$cosmosDbAccountName\"" >> "$ENV_OUT"
+echo "COSMOS_DATABASE_NAME=\"FactoryOpsDB\"" >> "$ENV_OUT"
+echo "COSMOS_ENDPOINT=\"$cosmosDbEndpoint\"" >> "$ENV_OUT"
+echo "COSMOS_KEY=\"$cosmosDbKey\"" >> "$ENV_OUT"
+echo "COSMOS_CONNECTION_STRING=\"$cosmosDbConnectionString\"" >> "$ENV_OUT"
 
 # API Management
-echo "APIM_NAME=\"$apiManagementName\"" >> ../.env
-echo "APIM_GATEWAY_URL=\"$apimGatewayUrl\"" >> ../.env
-echo "APIM_SUBSCRIPTION_KEY=\"$apimSubscriptionKey\"" >> ../.env
+echo "APIM_NAME=\"$apiManagementName\"" >> "$ENV_OUT"
+echo "APIM_GATEWAY_URL=\"$apimGatewayUrl\"" >> "$ENV_OUT"
+echo "APIM_SUBSCRIPTION_KEY=\"$apimSubscriptionKey\"" >> "$ENV_OUT"
 
 # Container Registry (ACR)
-echo "ACR_NAME=\"$acrName\"" >> ../.env
-echo "ACR_USERNAME=\"$acrUsername\"" >> ../.env
-echo "ACR_PASSWORD=\"$acrPassword\"" >> ../.env
-echo "ACR_LOGIN_SERVER=\"$acrLoginServer\"" >> ../.env
+echo "ACR_NAME=\"$acrName\"" >> "$ENV_OUT"
+echo "ACR_USERNAME=\"$acrUsername\"" >> "$ENV_OUT"
+echo "ACR_PASSWORD=\"$acrPassword\"" >> "$ENV_OUT"
+echo "ACR_LOGIN_SERVER=\"$acrLoginServer\"" >> "$ENV_OUT"
 
 # Application Insights
-echo "APPLICATION_INSIGHTS_INSTRUMENTATION_KEY=\"$appInsightsInstrumentationKey\"" >> ../.env
-echo "APPLICATION_INSIGHTS_CONNECTION_STRING=\"$appInsightsConnectionString\"" >> ../.env
-echo "APPLICATIONINSIGHTS_CONNECTION_STRING=\"$appInsightsConnectionString\"" >> ../.env
+echo "APPLICATION_INSIGHTS_INSTRUMENTATION_KEY=\"$appInsightsInstrumentationKey\"" >> "$ENV_OUT"
+echo "APPLICATION_INSIGHTS_CONNECTION_STRING=\"$appInsightsConnectionString\"" >> "$ENV_OUT"
+echo "APPLICATIONINSIGHTS_CONNECTION_STRING=\"$appInsightsConnectionString\"" >> "$ENV_OUT"
 
 # For backward compatibility, also set OpenAI-style variables pointing to AI Foundry
-echo "AZURE_OPENAI_SERVICE_NAME=\"$aiFoundryHubName\"" >> ../.env
+echo "AZURE_OPENAI_SERVICE_NAME=\"$aiFoundryHubName\"" >> "$ENV_OUT"
 # Construct correct Azure OpenAI endpoint format (.openai.azure.com instead of .cognitiveservices.azure.com)
 if [ -n "$aiFoundryHubName" ]; then
     azureOpenAIEndpoint="https://${aiFoundryHubName}.openai.azure.com/"
 else
     azureOpenAIEndpoint="$aiFoundryEndpoint"
 fi
-echo "AZURE_OPENAI_ENDPOINT=\"$azureOpenAIEndpoint\"" >> ../.env
-echo "AZURE_OPENAI_KEY=\"$aiFoundryKey\"" >> ../.env
-echo "AZURE_OPENAI_DEPLOYMENT_NAME=\"gpt-4.1\"" >> ../.env
-echo "MODEL_DEPLOYMENT_NAME=\"gpt-4.1\"" >> ../.env
+echo "AZURE_OPENAI_ENDPOINT=\"$azureOpenAIEndpoint\"" >> "$ENV_OUT"
+echo "AZURE_OPENAI_KEY=\"$aiFoundryKey\"" >> "$ENV_OUT"
+echo "AZURE_OPENAI_DEPLOYMENT_NAME=\"gpt-4.1\"" >> "$ENV_OUT"
+echo "MODEL_DEPLOYMENT_NAME=\"gpt-4.1\"" >> "$ENV_OUT"
 
 echo "Keys and properties are stored in '.env' file successfully."
 
@@ -461,7 +464,7 @@ if [ -n "$cosmosDbAccountName" ]; then
 else
     echo "Cosmos DB: NOT FOUND - You may need to deploy this service"
 fi
-echo "Environment file created: ../.env"
+echo "Environment file created: $ENV_OUT"
 
 # Show what needs to be deployed
 missing_services=""
